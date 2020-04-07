@@ -4,14 +4,14 @@
 
 # DIRECTORIES & DATE SET UP ----
 
-setwd('/Users/s1687811/Documents/GitHub/covid19/WHO_report/')
-today<- Sys.Date() - 4
+setwd('/Users/s1687811/Documents/GitHub/WHO_covid19_report/')
+today<- Sys.Date() - 5
 
 
 library(plyr)
 
 # LOAD DATA & SOURCE USEFUL FUNCTIONS ----
-source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R')
+source('/Users/s1687811/Documents/GitHub/WHO_covid19_report/script/sourced_functions_doublingTime_reports.R')
 
 
 who.tab<- read.csv('./input_files/WHO_countries.txt', sep = '\t', header=FALSE) # WHO list of countries
@@ -740,9 +740,11 @@ dev.off()
 
 
 #Map with countries in WHO-Africa for front page.
-# africa@data$WHOCountry <- ifelse(is.na(africa@data$country.y),0,1)
+# africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
+# africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
+# africa@data$WHOCountry <- ifelse(is.na(africa@data$country),0,1)
 # png(file = "./output/WHO_Africa.png", width=1080*2, height=960*3, pointsize=22)
-# typoLayer(spdf = africa, var = "WHOCountry", col = c("forestgreen", "white"), legend.pos = "n")
+# typoLayer(spdf = africa, var = "WHOCountry", col = c("darksalmon", "white"), legend.pos = "n")
 # dev.off()
 
 #Dt calculations

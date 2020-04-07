@@ -24,9 +24,6 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-#source('/Users/s1687811/Documents/GitHub/covid19/WHO_report/script/WHO_report.analysis.R')
-
-
 source('/Users/s1687811/Documents/GitHub/WHO_covid19_report/script/sourced_functions_doublingTime_reports.R')
 today<- Sys.Date() - 5
 library(plyr)
@@ -195,7 +192,7 @@ We compare the size and rate of increase of the COVID-19 epidemic across the cou
 
 
 ```{r mapWHO, fig.align = 'center', out.width= "75%"}
-knitr::include_graphics("/Users/s1687811/Documents/GitHub/covid19/WHO_report/input_files/Map_WHO_Countries.png")
+knitr::include_graphics("/Users/s1687811/Documents/GitHub/WHO_covid19_report/input_files/Map_WHO_Countries.png")
 ```
 
 &nbsp;
@@ -210,7 +207,7 @@ knitr::include_graphics("/Users/s1687811/Documents/GitHub/covid19/WHO_report/inp
 # WHO Africa situation overview
  
 ```{r mapSummaries, fig.align = 'center', out.width= "100%"}
-knitr::include_graphics("/Users/s1687811/Documents/GitHub/covid19/WHO_report/output/6Maps_WHO_Africa.png")
+knitr::include_graphics("/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/6Maps_WHO_Africa.png")
 ```
 
 &nbsp;
