@@ -467,7 +467,7 @@ plot.country<- function(c){
   mtext('Date (dd/mm)', side = 1, line = xBOTTOMlab.line.fbc, outer = TRUE, col = 'black', cex = xBOTTOMlab.cex.fbc, font = xBOTTOMlab.f.fbc)
   
   # TITLE
-  mtext(paste(who.tab[match(countries[c], who.tab$country), 'full_name']), side = 3, line = 2, outer = TRUE, col = 'black', cex = 2, font = 2)
+  mtext(paste(who.info.tab[match(countries[c], who.info.tab$country), 'full_name']), side = 3, line = 2, outer = TRUE, col = 'black', cex = 2, font = 2)
   
 }
 
