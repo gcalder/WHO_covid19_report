@@ -14,7 +14,6 @@ extra_dependencies: float
 ---
 
 
-
 ```{r setup, include=FALSE}
 
 
@@ -186,9 +185,6 @@ yseq.log.deaths<- seq(round_any(range(d.deaths.10k.log[,2:ncol(d.deaths.10k.log)
 
 
 We compare the size and rate of increase of the COVID-19 epidemic across the countries included in WHO Africa Region.
-&nbsp;
-
-&nbsp;
 
 ```{r mapWHO, fig.align = 'center', out.width= "75%"}
 knitr::include_graphics("/Users/s1687811/Documents/GitHub/WHO_covid19_report/input_files/WHO_Africa.png")
