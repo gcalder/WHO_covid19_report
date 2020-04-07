@@ -1,6 +1,6 @@
 ---
-title: "Covid19 situation report for WHO Africa"
-author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
+title: "COVID-19 situation report for WH0 Africa Region"
+author: "Produced by the TIBA COVID-19 Epidemic Response Unit"
 header-includes:
 - \usepackage{float}
 - \floatplacement{figure}{H}
@@ -8,14 +8,14 @@ header-includes:
 - \newcommand{\blandscape}{\begin{landscape}}
 - \newcommand{\elandscape}{\end{landscape}}
 output:
-  word_document:
-subtitle: 03/04/2020
+  pdf_document:
+subtitle: 07/04/2020
 extra_dependencies: float
 ---
 
 
-
 ```{r setup, include=FALSE}
+
 
 # SET UP CHUNK OPTIONS ---
 knitr::opts_chunk$set(echo = FALSE)
@@ -24,14 +24,11 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-#source('/Users/s1687811/Documents/GitHub/covid19/WHO_report/script/WHO_report.analysis.R')
-
-
-source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R')
 today<- Sys.Date() - 1
 library(plyr)
 
-load(paste0('/Users/s1687811/Documents/GitHub/covid19/WHO_report/output/WHO_report_analysis_', as.character(today), '.RData'))
+load(paste0('/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/WHO_report_analysis_', as.character(today), '.RData'))
+source('/Users/s1687811/Documents/GitHub/WHO_covid19_report/script/sourced_functions_doublingTime_reports.R')
 
 # FIGURES PARAMETERS ---
 palette<- brewer.pal(10, 'Paired') # 10 colorblind-friendly palette
@@ -186,28 +183,44 @@ yseq.log.deaths<- seq(round_any(range(d.deaths.10k.log[,2:ncol(d.deaths.10k.log)
 ```
 &nbsp;
 
-&nbsp;
-
-
-We compare the size and rate of increase of the COVID-19 epidemic across the countries included in WHO Africa Region.
-
-&nbsp;
-
-&nbsp;
-
-```{r mapWHO, fig.align = 'center', out.width= "75%"}
-knitr::include_graphics("/Users/s1687811/Documents/GitHub/covid19/WHO_report/input_files/Map_WHO_Countries.png")
-```
-
-&nbsp;
-
 \newpage
 
 \tableofcontents
 
 \newpage
 
-# Individual countries situations
+
+# Section 1: Overview
+
+We compare the size and rate of increase of the COVID-19 epidemic across the countries included in WHO Africa Region.
+
+```{r mapWHO, fig.align = 'center', out.width= "75%"}
+knitr::include_graphics("/Users/s1687811/Documents/GitHub/WHO_covid19_report/input_files/WHO_Africa.png")
+```
+
+
+\newpage
+
+ 
+```{r mapSummaries, fig.align = 'center', out.width= "100%"}
+knitr::include_graphics(paste0("/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/6Maps_WHO_Africa_", today, "_.png"))
+```
+
+&nbsp;
+
+The maps above summarise the in-country situations:  
+ 
+* Top-left: cumulated reported cases.  
+* Top-right: cumulated reported cases per 10,000 population on a log10 scale.  
+* Middle-left: cumulated reported deaths.  
+* Middle-right: cumulated reported deaths per 10,000 population on a log10 scale.  
+* Bottom-left: Overview of doubling time of cumulative incidence. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  
+* Bottom-right: Overview of doubling time of cumulative deaths per 10,000 population. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  
+
+
+\newpage
+
+# Section 2: Individual countries situations
 &nbsp;
 
 As of `r format(today, "%d/%m/%Y")`, each panel below respectively shows:  
@@ -219,9 +232,6 @@ As of `r format(today, "%d/%m/%Y")`, each panel below respectively shows:
 * Bottom-right: cumulated reported deaths per 10,000 population on a log10 scale.  
 
 &nbsp;
-
-
-\newpage
 
 
 \newpage
@@ -241,6 +251,7 @@ plot.country(c = 03)
 ```
 
 \newpage
+
 
 ## Benin
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
@@ -514,7 +525,7 @@ plot.country(c = 37)
 
 \newpage
 
-## Senegal
+## Sao Tome y Principe
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 38)
@@ -522,7 +533,8 @@ plot.country(c = 38)
 
 \newpage
 
-## Seychelles
+
+## Senegal
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 39)
@@ -530,7 +542,7 @@ plot.country(c = 39)
 
 \newpage
 
-## Sierra Leone
+## Seychelles
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 40)
@@ -538,7 +550,7 @@ plot.country(c = 40)
 
 \newpage
 
-## South Africa
+## Sierra Leone
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 41)
@@ -546,7 +558,7 @@ plot.country(c = 41)
 
 \newpage
 
-## South Sudan
+## South Africa
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 42)
@@ -554,7 +566,7 @@ plot.country(c = 42)
 
 \newpage
 
-## Togo
+## South Sudan
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 43)
@@ -562,7 +574,7 @@ plot.country(c = 43)
 
 \newpage
 
-## Uganda
+## Togo
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 44)
@@ -570,7 +582,7 @@ plot.country(c = 44)
 
 \newpage
 
-## United Republic of Tanzania
+## Uganda
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 45)
@@ -578,7 +590,7 @@ plot.country(c = 45)
 
 \newpage
 
-## Zambia
+## United Republic of Tanzania
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 46)
@@ -586,7 +598,7 @@ plot.country(c = 46)
 
 \newpage
 
-## Zimbabwe
+## Zambia
 ```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country(c = 47)
@@ -594,9 +606,15 @@ plot.country(c = 47)
 
 \newpage
 
+## Zimbabwe
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 48)
+```
 
+\newpage
 
-# APPENDIX
+# Appendix
 ## Data
 ### Sources and access
 - Case counts for countries in WHO African region from WHO Coronavirus disease (COVID-2019) situation reports https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports (accessed 2400 `r format(today, "%d/%m/%Y")`).  
@@ -626,6 +644,8 @@ Confidence intervals calculated using bootstrapping of a simulated dataset with 
 ### Cumulative incidence
 &nbsp;
 ```{r TabIncidenceRaw, results = 'asis', echo = FALSE}
+# Table produced in the analysis script, as it requires the 95%CI, extracted from the simulations
+
 kable(dat.cumsumraw.df)
 ```
 
@@ -636,6 +656,7 @@ kable(dat.cumsumraw.df)
 &nbsp;
 
 ```{r TabIncidence10k, results = 'asis', echo = FALSE}
+# Table produced in the analysis script, as it requires the 95%CI, extracted from the simulations
 kable(dat.cumsum10k.df)
 ```
 
@@ -645,8 +666,18 @@ kable(dat.cumsum10k.df)
 &nbsp;
 
 ```{r TabDeathsRaw, results = 'asis', echo = FALSE}
+# This does not report CI so directly get it from the data tables
 
-kable(dat.cumsumraw.deaths.df[,c(1,2)])
+tab.total.deaths<- d.deaths.long %>%
+  group_by(country) %>%
+  slice(n()) %>%
+  ungroup() %>%
+  select(-date) %>%
+  arrange(-cumNumDeaths) %>%
+  rename(Country = country,
+         `Cumulative deaths` = cumNumDeaths)
+
+kable(tab.total.deaths)
 ```
 
 \newpage
@@ -655,7 +686,19 @@ kable(dat.cumsumraw.deaths.df[,c(1,2)])
 &nbsp;
 
 ```{r TabDeaths10k, results = 'asis', echo = FALSE}
-kable(dat.cumsumraw.deaths10k.df[,c(1,2)])
+# This does not report CI so directly get it from the data tables
+
+tab.total.deaths.10k<- d.deaths.10k.log.long %>%
+  mutate(cumdeaths_10k = 10^(cumdeaths_10k_log)) %>%
+  group_by(country) %>%
+  slice(n()) %>%
+  ungroup() %>%
+  select(-date, -cumdeaths_10k_log) %>%
+  arrange(-cumdeaths_10k) %>%
+  rename(Country = country,
+         `Cumulative deaths per 10k pop.` = cumdeaths_10k)
+
+kable(tab.total.deaths.10k)
 ```
 
 \newpage
