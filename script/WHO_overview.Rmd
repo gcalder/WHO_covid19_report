@@ -25,7 +25,7 @@ knitr::opts_chunk$set(message=FALSE)
 
 
 source('/Users/s1687811/Documents/GitHub/WHO_covid19_report/script/sourced_functions_doublingTime_reports.R')
-today<- Sys.Date() - 5
+today<- Sys.Date() - 1
 library(plyr)
 
 load(paste0('/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/WHO_report_analysis_', as.character(today), '.RData'))
@@ -207,7 +207,7 @@ knitr::include_graphics("/Users/s1687811/Documents/GitHub/WHO_covid19_report/inp
 # WHO Africa situation overview
  
 ```{r mapSummaries, fig.align = 'center', out.width= "100%"}
-knitr::include_graphics("/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/6Maps_WHO_Africa.png")
+knitr::include_graphics(paste0("/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/6Maps_WHO_Africa_", today, "_.png"))
 ```
 
 &nbsp;
