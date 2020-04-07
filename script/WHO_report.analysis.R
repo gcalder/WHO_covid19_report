@@ -16,7 +16,7 @@
 
 setwd('/Users/s1687811/Documents/GitHub/WHO_covid19_report/') 
 today<- Sys.Date() - 1  # Set date as to that of the data to fetch.
-its = 10  # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
+its = 10 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
 source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') # Source several functions used in the below script. See README file for details. 
@@ -25,6 +25,17 @@ time_window<- 7 # Time window over which doubling time is calculated
 t2.define<- today
 t1.define<- t2.define - time_window
 
+library(geojsonio)
+library(utils)
+library(httr)
+library(tidyverse)
+library(magrittr)
+library(sf)
+library(RColorBrewer)
+library(classInt)
+library(geojson)
+library(cartography)
+library(magick)
 
 # LOADING DATA ----
 
@@ -86,6 +97,17 @@ d.deaths.10k.log<- # Wide version of the above
 
 
 who_data<- read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'data for map') 
+
+
+
+
+# Map with countries in WHO-Africa for front page.
+# africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
+# africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
+# africa@data$WHOCountry <- ifelse(is.na(africa@data$location),0,1)
+# png(file = "input_files/WHO_Africa.png", width=1082, height=960, pointsize=22)
+# typoLayer(spdf = africa, var = "WHOCountry", col = c("darksalmon", "white"), legend.pos = "n")
+# dev.off()
 
 
 # DOUBLING TIMES: Incidence----
@@ -623,21 +645,6 @@ rasterImage(image5_crop, 0, 0, 1,1)
 plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
 rasterImage(image6_crop, 0, 0, 1,1)
 dev.off()
-
-
-#Map with countries in WHO-Africa for front page.
-# africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
-# africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
-# africa@data$WHOCountry <- ifelse(is.na(africa@data$country),0,1)
-# png(file = "./output/WHO_Africa.png", width=1080*2, height=960*3, pointsize=22)
-# typoLayer(spdf = africa, var = "WHOCountry", col = c("darksalmon", "white"), legend.pos = "n")
-# dev.off()
-
-#Dt calculations
-#Dt_Cases = africa@data %>% group_by(countriesAndTerritories) %>% arrange(countriesAndTerritories,dateRep) %>% mutate(Dt=7*log(2)/log(nth(cumCases,-1)/nth(cumCases,-8))) %>% summarise(Dt=max(Dt))
-# 
-# Dt_Deaths = africa_data %>% group_by(countriesAndTerritories) %>% arrange(countriesAndTerritories,dateRep) %>% mutate(Dt=7*log(2)/log(nth(cumDeaths,-1)/nth(cumDeaths,-8))) %>% summarise(Dt=max(Dt))
-
 
 
 # SAVE OUTPUT RData ----
