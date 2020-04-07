@@ -254,6 +254,8 @@ Confidence intervals calculated using bootstrapping of a simulated dataset with 
 ### Cumulative incidence
 &nbsp;
 ```{r TabIncidenceRaw, results = 'asis', echo = FALSE}
+# Table produced in the analysis script, as it requires the 95%CI, extracted from the simulations
+
 kable(dat.cumsumraw.df)
 ```
 
@@ -264,6 +266,7 @@ kable(dat.cumsumraw.df)
 &nbsp;
 
 ```{r TabIncidence10k, results = 'asis', echo = FALSE}
+# Table produced in the analysis script, as it requires the 95%CI, extracted from the simulations
 kable(dat.cumsum10k.df)
 ```
 
@@ -273,8 +276,18 @@ kable(dat.cumsum10k.df)
 &nbsp;
 
 ```{r TabDeathsRaw, results = 'asis', echo = FALSE}
+# This does not report CI so directly get it from the data tables
 
-kable(dat.cumsumraw.deaths.df[,c(1,2)])
+tab.total.deaths<- d.deaths.long %>%
+  group_by(country) %>%
+  slice(n()) %>%
+  ungroup() %>%
+  select(-date) %>%
+  arrange(-cumNumDeaths) %>%
+  rename(Country = country,
+         `Cumulative deaths` = cumNumDeaths)
+
+kable(tab.total.deaths)
 ```
 
 \newpage
@@ -283,7 +296,19 @@ kable(dat.cumsumraw.deaths.df[,c(1,2)])
 &nbsp;
 
 ```{r TabDeaths10k, results = 'asis', echo = FALSE}
-kable(dat.cumsumraw.deaths10k.df[,c(1,2)])
+# This does not report CI so directly get it from the data tables
+
+tab.total.deaths.10k<- d.deaths.10k.log.long %>%
+  mutate(cumdeaths_10k = 10^(cumdeaths_10k_log)) %>%
+  group_by(country) %>%
+  slice(n()) %>%
+  ungroup() %>%
+  select(-date, -cumdeaths_10k_log) %>%
+  arrange(-cumdeaths_10k) %>%
+  rename(Country = country,
+         `Cumulative deaths per 10k pop.` = cumdeaths_10k)
+
+kable(tab.total.deaths.10k)
 ```
 
 \newpage

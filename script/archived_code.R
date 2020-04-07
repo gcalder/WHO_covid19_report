@@ -115,3 +115,16 @@ dat.cumsumraw.deaths10k.df<- dat.cumsumraw.deaths10k.df %>%
 dat.cumsumraw.deaths10k.df$`Cum. Deaths per 10k pop.`[dat.cumsumraw.deaths10k.df$`Cum. Deaths per 10k pop.` == '   NA']<- 0
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
