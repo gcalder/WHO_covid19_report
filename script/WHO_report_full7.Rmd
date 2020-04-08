@@ -219,29 +219,29 @@ The maps above summarise the in-country situations:
 
 \newpage
 
-```{r heatmap, echo=FALSE, fig.align = 'left', fig.height = 11, fig.width = 11, fig.fullwidth = TRUE}
-    
-ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference (days)`)) + 
+```{r heatmap,echo=FALSE,  fig.height = 14, fig.width = 14, fig.fullwidth = TRUE}
+
+ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference (days)`)) +
   geom_tile()+
   xlab('')+ylab('')+
   scale_fill_gradient(low="white", high="firebrick") +
-  geom_text(aes(label = epidemic.diff.text, x = `compared to`, y = `focal country`), size = 2, fontface = 2)+
-  #scale_x_discrete(position = "top")+
+  #geom_text(aes(label = epidemic.diff.text, x = `compared to`, y = `focal country`), size = 10, fontface = 2)+
+  scale_x_discrete(position = "top")+
   theme_bw()+
-  theme(legend.position="top",
-    panel.border= element_rect(color = 'black', size = 0.5),
-    axis.text.y = element_text(face="bold", colour="black", size=10),
-    axis.text.x = element_text(colour="black", face="bold", size=10, angle = 45, hjust = 0.95, vjust = 1),
-    axis.title.y = element_text(face="bold", colour="black", size=15),
-    axis.title.x = element_text(face="bold", colour="black", size=15),
-    axis.line.y = element_line(color="black", size = 0.5),
-    axis.line.x = element_line(color="black", size = 0.5),
-    plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
-    panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
+  theme(legend.position="bottom",
+        #legend.text = element_text(size = 35),
+        legend.title = element_text(face = 2, size = 10),
+        panel.border= element_rect(color = 'black', size = 0.5),
+        axis.text.y = element_text(face="bold", colour="black", size=15),
+        axis.text.x = element_text(colour="black", face="bold", size=15, angle = 90, hjust = 0, vjust = 0.5),
+        #axis.title.y = element_text(face="bold", colour="black", size=25),
+        #axis.title.x = element_text(face="bold", colour="black", size=25),
+        axis.line.y = element_line(color="black", size = 0.5),
+        axis.line.x = element_line(color="black", size = 0.5),
+        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
+        panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
 
 ```
-&nbsp;
-
 **Figure 1. Pairwise epidemic progression comparison across WHO Africa region**. The reported numbers are the numbers of days ahead the countries in horizontal entries, arranged from most ahead to least ahead, are relative to the countries in vertical entries. The full matrix is symetric. Only the upper half is represented. Grey shades appear in each case of (i) a country compared to itself or (ii) the two countries compared have not reached similar epidemic progression yet.
 
 

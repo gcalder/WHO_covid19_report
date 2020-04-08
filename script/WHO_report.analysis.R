@@ -680,6 +680,29 @@ time.diff.df$`compared to`<- factor(time.diff.df$`compared to`, levels = unique(
 
 upper<- time.diff.df[-which(na.omit(time.diff.df$`Time difference (days)`) < 0),] # This is the dataframe used for the heatmap in final report
 
+
+png('/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/Rplot_heatmap.png', width = 2160, height = 2000)
+ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference (days)`)) +
+  geom_tile()+
+  xlab('')+ylab('')+
+  scale_fill_gradient(low="white", high="firebrick") +
+  #geom_text(aes(label = epidemic.diff.text, x = `compared to`, y = `focal country`), size = 10, fontface = 2)+
+  #scale_x_discrete(position = "top")+
+  theme_bw()+
+  theme(legend.position="top",
+        legend.text = element_text(size = 35),
+        legend.title = element_text(size = 35),
+        panel.border= element_rect(color = 'black', size = 0.5),
+        axis.text.y = element_text(face="bold", colour="black", size=35),
+        axis.text.x = element_text(colour="black", face="bold", size=35, angle = 45, hjust = 0.95, vjust = 1),
+        #axis.title.y = element_text(face="bold", colour="black", size=25),
+        #axis.title.x = element_text(face="bold", colour="black", size=25),
+        axis.line.y = element_line(color="black", size = 0.5),
+        axis.line.x = element_line(color="black", size = 0.5),
+        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
+        panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
+dev.off()
+
 # SAVE OUTPUT RData ----
 save.image(paste0('output/WHO_report_analysis_', today, '.RData'))
 
