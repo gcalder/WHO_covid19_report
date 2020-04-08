@@ -219,7 +219,7 @@ The maps above summarise the in-country situations:
 
 \newpage
 
-```{r heatmap, echo=FALSE, fig.align = 'left', fig.height = 11, fig.width = 11}
+```{r heatmap, echo=FALSE, fig.align = 'left', fig.height = 11, fig.width = 11, fig.fullwidth = TRUE}
     
 ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference (days)`)) + 
   geom_tile()+
