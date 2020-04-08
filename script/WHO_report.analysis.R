@@ -15,7 +15,7 @@
 # 1) SET UP ----
 
 setwd('/Users/s1687811/Documents/GitHub/WHO_covid19_report/') 
-today<- Sys.Date() - 1  # Set date as to that of the data to fetch.
+today<- Sys.Date() - 2  # Set date as to that of the data to fetch.
 its = 10 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -649,5 +649,22 @@ dev.off()
 
 # SAVE OUTPUT RData ----
 save.image(paste0('output/WHO_report_analysis_', today, '.RData'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

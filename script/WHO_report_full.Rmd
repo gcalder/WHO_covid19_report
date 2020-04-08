@@ -9,7 +9,7 @@ header-includes:
 - \newcommand{\elandscape}{\end{landscape}}
 output:
   pdf_document:
-subtitle: 07/04/2020
+subtitle: 08/04/2020
 extra_dependencies: float
 ---
 
@@ -24,7 +24,7 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today<- Sys.Date() - 1
+today<- Sys.Date() - 2
 library(plyr)
 
 load(paste0('/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/WHO_report_analysis_', as.character(today), '.RData'))
