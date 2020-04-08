@@ -228,6 +228,7 @@ ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference
   #geom_text(aes(label = epidemic.diff.text, x = `compared to`, y = `focal country`), size = 10, fontface = 2)+
   scale_x_discrete(position = "top")+
   theme_bw()+
+  labs(colour = 'yo')+
   theme(legend.position="bottom",
         #legend.text = element_text(size = 35),
         legend.title = element_text(face = 2, size = 10),
