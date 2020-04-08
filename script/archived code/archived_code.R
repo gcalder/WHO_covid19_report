@@ -2,8 +2,11 @@
 
 
 # Producing Aligned curves dataset used in figure 6
-aligned_curves<- data.frame(day_since_start = c(0, cumsum(as.numeric(diff(d$date)))))
 
+
+
+
+aligned_curves<- data.frame(day_since_start = c(0, cumsum(as.numeric(diff(d[rowSums(d[,-1]) > 0,]$date)))))
 for(c in 2:ncol(d)){
   d.temp = d[,c(1, c)]
   
@@ -22,6 +25,93 @@ for(c in 2:ncol(d)){
   }
   
 }
+
+
+
+# working on cumNum cases, raw --> plot = log of cumCases, not per 10k pop
+
+View(d[rowSums(d[,-1]) > 0,])
+
+
+aligned_curves$date<- as.Date(d[rowSums(d[,-1]) > 0, 1])
+
+aligned_curves.focal<- aligned_curves[aligned_curves$date > (today - 7),]
+
+
+# RESTART FAN
+
+d.last.7<- d[d$date > (today - 7),]
+aligned_curves<- data.frame(day_since_start = c(0, cumsum(as.numeric(diff(d.last.7$date)))))
+for(c in 2:ncol(d.last.7)){
+  d.temp = d.last.7[,c(1, c)]
+  
+  if(max(d.temp[,2]) == 0){
+    
+    d.temp.trim.f = data.frame(day_since_start = 0, cumCases = NA) 
+    colnames(d.temp.trim.f)[2]<- colnames(d.temp)[2]
+    aligned_curves<- 
+      left_join(aligned_curves, d.temp.trim.f, by = 'day_since_start')
+  }else{
+    d.temp.trim = d.temp[which(d.temp[,2] > 0), ]
+    d.temp.trim$day_since_start = c(0, cumsum(as.numeric(diff(d.temp.trim$date))))
+    d.temp.trim.f<- d.temp.trim[,c(3,2)]
+    aligned_curves<- 
+      left_join(aligned_curves, d.temp.trim.f, by = 'day_since_start')
+  }
+  
+}
+
+aligned.f<- cbind(dat = d.last.7$date,
+      aligned_curves)
+
+
+
+
+diff(aligned.f$Algeria)
+
+
+
+plot(log10(Algeria) ~ dat, data = aligned.f, type = 'l')
+
+xseq.fbc.5<- aligned.f$dat
+
+ymax.fbc.5<- round_any(max(aligned.f[,-c(1,2)], na.rm = TRUE), 10)
+ymax.fbc.5<- round_any(max(aligned.f[,-c(1,2)], na.rm = TRUE), 10)
+
+
+yseq.fbc.5 = seq(0, ymax.fbc.5, 10) 
+
+
+
+
+plot('', xlim = range(xseq.fbc.5), ylim = range(), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
+axis(1, at = xseq.fbc, labels = format(xseq.fbc, date.format), font = x.font.fbc, cex.axis = x.cex.fbc)
+axis(2, at = yseq.raw.cases, font = y.font.fbc, cex.axis = y.cex.fbc)
+
+abline(v = xseq.fbc, h = yseq.raw.cases, col = 'lightgrey', lty = 'dotted')
+for(c2 in 2:ncol(d)){
+  lines(d[,c2] ~ d$date, lwd = 1.5, col = 'grey')
+} # Draw lines + overplot focal country line
+lines(d[,c] ~ d$date, lwd = 3)
+
+
+# NEW v2.0
+
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Last day DEATHS & CI, raw ----

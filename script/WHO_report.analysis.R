@@ -472,6 +472,40 @@ plot.country<- function(c){
 }
 
 
+# WOULD BE TO ADD TO IN-COUNTRY PLOTS:
+# d.last.7<- d[d$date > (today - 7),]
+# 
+# test<- d[which(d$date %in% c(today, today-7)), ] %>%
+#   gather('country', 'n', 2:ncol(.)) %>%
+#   group_by(country) %>%
+#   mutate(log10increase.7days = log10(n/n[1]),
+#          increase.7days = n/n[1])
+# 
+# ggplot(test, aes(x = as.factor(date), y = log10increase.7days, group = country))+
+#   geom_line(col = 'grey') + ggtitle('Angola')+
+#   geom_line(data = test[test$country == 'Angola',], size = 1.5)+
+#   geom_point(data = test[test$country == 'Angola',], size = 1.8)+
+#   ylab('Log10 increase over the past 7 days\n')+ xlab('')+
+#   scale_y_continuous(breaks = log10(seq(1:10)),
+#                      labels = 10^(log10(seq(1:10))))+
+#   theme_bw()+
+#   theme(
+#     panel.border= element_blank(),
+#     axis.text.y = element_text(face="bold", colour="black", size=10),
+#     axis.text.x = element_text(colour="black", face="bold", size=10),
+#     axis.title.y = element_text(face="bold", colour="black", size=11),
+#     axis.title.x = element_text(face="bold", colour="black", size=11),
+#     axis.line.y = element_line(color="black", size = 0.5),
+#     axis.line.x = element_line(color="black", size = 0.5),
+#     plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
+#     panel.grid.major.y = element_line(color = 'grey', linetype = 'dotted'),
+#     panel.grid.major.x = element_blank(),
+#     panel.grid.minor = element_blank()
+#     
+#   )
+
+
+
 
 # DATA FOR MAPS ----
 
@@ -681,27 +715,8 @@ time.diff.df$`compared to`<- factor(time.diff.df$`compared to`, levels = unique(
 upper<- time.diff.df[-which(na.omit(time.diff.df$`Time difference (days)`) < 0),] # This is the dataframe used for the heatmap in final report
 
 
-png('/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/Rplot_heatmap.png', width = 2160, height = 2000)
-ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference (days)`)) +
-  geom_tile()+
-  xlab('')+ylab('')+
-  scale_fill_gradient(low="white", high="firebrick") +
-  #geom_text(aes(label = epidemic.diff.text, x = `compared to`, y = `focal country`), size = 10, fontface = 2)+
-  #scale_x_discrete(position = "top")+
-  theme_bw()+
-  theme(legend.position="top",
-        legend.text = element_text(size = 35),
-        legend.title = element_text(size = 35),
-        panel.border= element_rect(color = 'black', size = 0.5),
-        axis.text.y = element_text(face="bold", colour="black", size=35),
-        axis.text.x = element_text(colour="black", face="bold", size=35, angle = 45, hjust = 0.95, vjust = 1),
-        #axis.title.y = element_text(face="bold", colour="black", size=25),
-        #axis.title.x = element_text(face="bold", colour="black", size=25),
-        axis.line.y = element_line(color="black", size = 0.5),
-        axis.line.x = element_line(color="black", size = 0.5),
-        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
-        panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
-dev.off()
+
+
 
 # SAVE OUTPUT RData ----
 save.image(paste0('output/WHO_report_analysis_', today, '.RData'))

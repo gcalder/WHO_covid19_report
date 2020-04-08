@@ -247,6 +247,399 @@ ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference
 
 \newpage
 
+# Section 2: Individual countries situations
+&nbsp;
+
+As of `r format(today, "%d/%m/%Y")`, each panel below respectively shows:  
+&nbsp;
+ 
+* Top-left: cumulated reported cases.  
+* Top-right: cumulated reported cases per 10,000 population on a log10 scale.  
+* Bottom-left: cumulated reported deaths.  
+* Bottom-right: cumulated reported deaths per 10,000 population on a log10 scale.  
+
+&nbsp;
+
+
+\newpage
+
+## Algeria
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 02)
+```
+
+\newpage
+
+## Angola
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 03)
+```
+
+\newpage
+
+
+## Benin
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 04)
+```
+
+\newpage
+
+## Botswana
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 05)
+```
+
+\newpage
+
+## Burkina Faso
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 06)
+```
+
+\newpage
+
+## Burundi
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 07)
+```
+
+\newpage
+
+## Cameroon
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 08)
+```
+
+\newpage
+
+## Cape Verde
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 09)
+```
+
+\newpage
+
+## Central African Republic
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 10)
+```
+
+\newpage
+
+## Chad
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 11)
+```
+
+\newpage
+
+## Comoros
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 12)
+```
+
+\newpage
+
+## Congo
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 13)
+```
+
+\newpage
+
+## Cote d'Ivoire
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 14)
+```
+
+\newpage
+
+## Democratic Republic of the Congo
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 15)
+```
+
+\newpage
+
+## Equatorial Guinea
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 16)
+```
+
+\newpage
+
+## Eritrea
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 17)
+```
+
+\newpage
+
+## Eswatini
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 18)
+```
+
+\newpage
+
+## Ethiopia
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 19)
+```
+
+\newpage
+
+## Gabon
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 20)
+```
+
+\newpage
+
+## Gambia
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 21)
+```
+
+\newpage
+
+## Ghana
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 22)
+```
+
+\newpage
+
+## Guinea
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 23)
+```
+
+\newpage
+
+## Guinea Bissau
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 24)
+```
+
+\newpage
+
+## Kenya
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 25)
+```
+
+\newpage
+
+## Lesotho
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 26)
+```
+
+\newpage
+
+## Liberia
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 27)
+```
+
+\newpage
+
+## Madagascar
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 28)
+```
+
+\newpage
+
+## Malawi
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 29)
+```
+
+\newpage
+
+## Mali
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 30)
+```
+
+\newpage
+
+## Mauritania
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 31)
+```
+
+\newpage
+
+## Mauritius
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 32)
+```
+
+\newpage
+
+## Mozambique
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 33)
+```
+
+\newpage
+
+## Namibia
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 34)
+```
+
+\newpage
+
+## Niger
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 35)
+```
+
+\newpage
+
+## Nigeria
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 36)
+```
+
+\newpage
+
+## Rwanda
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 37)
+```
+
+\newpage
+
+## Sao Tome y Principe
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 38)
+```
+
+\newpage
+
+
+## Senegal
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 39)
+```
+
+\newpage
+
+## Seychelles
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 40)
+```
+
+\newpage
+
+## Sierra Leone
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 41)
+```
+
+\newpage
+
+## South Africa
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 42)
+```
+
+\newpage
+
+## South Sudan
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 43)
+```
+
+\newpage
+
+## Togo
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 44)
+```
+
+\newpage
+
+## Uganda
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 45)
+```
+
+\newpage
+
+## United Republic of Tanzania
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 46)
+```
+
+\newpage
+
+## Zambia
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 47)
+```
+
+\newpage
+
+## Zimbabwe
+```{r, echo=FALSE,  fig.height = 8, fig.width = 8, fig.fullwidth = TRUE}
+countries<- colnames(d)
+plot.country(c = 48)
+```
+
+\newpage
 
 # Appendix
 ## Data
