@@ -647,8 +647,44 @@ rasterImage(image6_crop, 0, 0, 1,1)
 dev.off()
 
 
+
+# PAIRWISE TIME AHEAD COMPARISON ----
+d.10k<- # Cumulative cases per 10k
+  read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative cases per 10k popula') %>%
+  rename(`Cote d'Ivoire` = `Côte d’Ivoire`) %>%
+  mutate(date = as.Date(date)) %>%
+  as.data.frame()
+
+pairs<- expand.grid(colnames(d.10k[,-1]), colnames(d.10k[,-1]))
+pairs$Var1<- as.character(pairs$Var1)
+pairs$Var2<- as.character(pairs$Var2)
+pairs$time.diff<- NA
+for(i in 1:nrow(pairs)){
+  
+  pairs$time.diff[i]<- epidemic.diff(d.10k, focal.country = as.character(pairs[i,1]), vs.country =  as.character(pairs[i,2]))
+  
+}
+
+time.diff.df<-
+  pairs[order(pairs$time.diff, na.last = TRUE, decreasing = TRUE), ] %>%
+  rename(`focal country` = Var1,
+         `compared to` = Var2,
+         `Time difference (days)` = time.diff)
+
+time.diff.df$`focal country`<- who.info.tab[match(time.diff.df$`focal country`, who.info.tab$country), 'name_plot']
+time.diff.df$`compared to`<- who.info.tab[match(time.diff.df$`compared to`, who.info.tab$country), 'name_plot']
+
+time.diff.df$epidemic.diff.text<- formatC(time.diff.df$`Time difference (days)`, digits = 1, format = "f")
+time.diff.df$`focal country`<- factor(time.diff.df$`focal country`, levels = rev(unique(as.character(time.diff.df$`focal country`))))
+time.diff.df$`compared to`<- factor(time.diff.df$`compared to`, levels = unique(as.character(time.diff.df$`compared to`)))
+
+upper<- time.diff.df[-which(na.omit(time.diff.df$`Time difference (days)`) < 0),] # This is the dataframe used for the heatmap in final report
+
 # SAVE OUTPUT RData ----
 save.image(paste0('output/WHO_report_analysis_', today, '.RData'))
+
+
+
 
 
 
