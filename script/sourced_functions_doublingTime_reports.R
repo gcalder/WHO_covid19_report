@@ -182,6 +182,8 @@ data.cleaner<- function(df){
   return(df.out)
   
 } #cbind(date, numNewCases)
+
+
 compute.td.m1.v2<- function(dat, user.t1, user.t2){
   
   # Format data
@@ -194,6 +196,8 @@ compute.td.m1.v2<- function(dat, user.t1, user.t2){
   user.n.t1<- dat %>% filter(date == user.t1) %>% select(cumNumCases)
   user.n.t2<- dat %>% filter(date == user.t2) %>% select(cumNumCases)
   Td<- round(nb.days/(log2(user.n.t2[[1]]/user.n.t1[[1]])), 1) #same as nb.days * (log(2)/(log(user.n.t2[[1]]/user.n.t1[[1]])))
+  
+  Td = ifelse(length(Td) > 0, Td, NA)
   
   return(Td)
   
