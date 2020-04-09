@@ -15,7 +15,7 @@
 # 1) SET UP ----
 
 setwd('/Users/s1687811/Documents/GitHub/WHO_covid19_report/') 
-today<- Sys.Date() - 2  # Set date as to that of the data to fetch.
+today<- Sys.Date() - 3  # Set date as to that of the data to fetch.
 its = 10 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -472,79 +472,9 @@ plot.country<- function(c){
 }
 
 
-# WOULD BE TO ADD TO IN-COUNTRY PLOTS:
-# d.last.7<- d[d$date > (today - 7),]
-# 
-# test<- d[which(d$date %in% c(today, today-7)), ] %>%
-#   gather('country', 'n', 2:ncol(.)) %>%
-#   group_by(country) %>%
-#   mutate(log10increase.7days = log10(n/n[1]),
-#          increase.7days = n/n[1])
-# 
-# ggplot(test, aes(x = as.factor(date), y = log10increase.7days, group = country))+
-#   geom_line(col = 'grey') + ggtitle('Angola')+
-#   geom_line(data = test[test$country == 'Angola',], size = 1.5)+
-#   geom_point(data = test[test$country == 'Angola',], size = 1.8)+
-#   ylab('Log10 increase over the past 7 days\n')+ xlab('')+
-#   scale_y_continuous(breaks = log10(seq(1:10)),
-#                      labels = 10^(log10(seq(1:10))))+
-#   theme_bw()+
-#   theme(
-#     panel.border= element_blank(),
-#     axis.text.y = element_text(face="bold", colour="black", size=10),
-#     axis.text.x = element_text(colour="black", face="bold", size=10),
-#     axis.title.y = element_text(face="bold", colour="black", size=11),
-#     axis.title.x = element_text(face="bold", colour="black", size=11),
-#     axis.line.y = element_line(color="black", size = 0.5),
-#     axis.line.x = element_line(color="black", size = 0.5),
-#     plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
-#     panel.grid.major.y = element_line(color = 'grey', linetype = 'dotted'),
-#     panel.grid.major.x = element_blank(),
-#     panel.grid.minor = element_blank()
-#     
-#   )
-
-
 
 
 # DATA FOR MAPS ----
-
-# tmp1<- gather(tail(d,1), 'country', 'total_cases', 2:ncol(d))[,-1]
-# tmp2<- gather(tail(d.deaths,1), 'country', 'total_deaths', 2:ncol(d.deaths))[,-1]
-# 
-# tmp3<- d %>%
-#   gather('country', 'cumcases', 2:ncol(d)) %>%
-#   left_join(pops, by = 'country') %>%
-#   mutate(cumcases_10k = cumcases * (10000/popsize)) %>%
-#   select(date, country, cumcases_10k) %>%
-#   spread(country, cumcases_10k) %>%
-#   tail(., 1) %>%
-#   gather('country', 'CaseperPop', 2:ncol(d))%>%
-#   select(-date)
-# 
-# tmp4<- d.deaths %>%
-#   gather('country', 'cumDeaths', 2:ncol(d.deaths)) %>%
-#   left_join(pops, by = 'country') %>%
-#   mutate(cumDeaths_10k = cumDeaths * (10000/popsize)) %>%
-#   select(date, country, cumDeaths_10k) %>%
-#   spread(country, cumDeaths_10k) %>%
-#   tail(., 1) %>%
-#   gather('country', 'DeathsperPop', 2:ncol(d.deaths))%>%
-#   select(-date)
-# 
-# who_data<- left_join(iso3, pops, by = 'country') %>%
-#   left_join(tmp1, 'country') %>%
-#   left_join(tmp2, 'country') %>%
-#   left_join(tmp3, 'country') %>%
-#   left_join(tmp4, 'country') %>%
-#   replace(is.na(.), 0) %>%
-#   as.data.frame() %>%
-#   rename(pop = popsize)
-
-
-#iso3<- read.table('input_files/Africa_countryISO3.txt', header=TRUE, sep = '\t')
-#iso3.temp<- rename(iso3, Country = country)
-
 
 who_dt_data<- # Assemble the doubling times formatted for maps plotting
 left_join(who.info.tab[,c('ISO3', 'country')], Td.report[,1:2], by = 'country') %>%
@@ -629,7 +559,7 @@ choroLayer(spdf = africa, var = "Dt_cases", colNA = "grey", legend.nodata = "Non
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
 dev.off()
 
-# 2.6: Dt DEATHS ----
+# Map Dt DEATHS ----
 breaks <- classIntervals(africa@data$Dt_deaths, n = 6, style = "jenks", na.rm=T)$brks
 breaks[2]<-0.00001
 palgreen <- brewer.pal(7, name = "Greens")
