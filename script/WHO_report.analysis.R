@@ -15,7 +15,7 @@
 # 1) SET UP ----
 
 setwd('/Users/s1687811/Documents/GitHub/WHO_covid19_report/') 
-today<- Sys.Date() -1 # Set date as to that of the data to fetch.
+today<- Sys.Date() - 1 # Set date as to that of the data to fetch.
 its = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -113,12 +113,12 @@ who_data<- read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xls
 
 
 #Map with countries in WHO-Africa for front page.
-# africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
-# africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
-# africa@data$WHOCountry <- ifelse(is.na(africa@data$location),0,1)
-# png(file = "input_files/WHO_Africa3.png", width=3246, height=2880, pointsize=22)
-# typoLayer(spdf = africa, var = "WHOCountry", col = c("darksalmon", "white"), legend.pos = "n")
-# dev.off()
+africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
+africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
+africa@data$WHOCountry <- ifelse(is.na(africa@data$location),0,1)
+png(file = "input_files/WHO_Africa3.png", width=3246, height=2880, pointsize=22)
+typoLayer(spdf = africa, var = "WHOCountry", col = c("darkorange2", "white"), legend.pos = "n")
+dev.off()
 
 
 # DOUBLING TIMES: Incidence----
@@ -645,7 +645,7 @@ plot.country.2<- function(c){
   # ADD LABELS ----
   # Y-labels
   mtext('Cumulative', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.85)
-  mtext('Per 10k pop.', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.5)
+  mtext('Per 10k population', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.5)
   mtext('Relative increase', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.15)
   
   # X-labels
@@ -693,12 +693,20 @@ breaks[2]<-1
 palblue <- brewer.pal(9, name = "Blues")
 palblue[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_cum_cases_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "total_cases", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palblue,legend.title.txt = "Cumulative Cases\n", legend.title.cex = 1,
-           legend.values.cex = 1, legend.pos = c(-30,-40))
-points(-23.3, -36, pch = 16, col = 'white', cex = 2)
-text(-24, -35, 'No case reported', adj = 0)
+choroLayer(spdf = africa, var = "total_cases", colNA = "grey", legend.nodata = "Non WHO Afro country",
+           breaks=breaks, col=palblue,
+           legend.title.txt = "",
+           legend.title.cex = 1,
+           legend.values.cex = 1, 
+           legend.pos = c(-30,-35)) # -30, -40
+
+points(-23.3, -31, pch = 16, col = 'white', cex = 2)
+text(-24, -30, 'No case reported', adj = 0)
 dev.off()
+
+
+
+
 
 # Map CASES 10k ----
 breaks <- classIntervals(africa@data$CaseperPop, n = 8, style = "jenks", na.rm=T)$brks
@@ -707,11 +715,11 @@ breaks[2]<-0.000001
 palblue <- brewer.pal(9, name = "Blues")
 palblue[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_cases_10k_pop_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "CaseperPop", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palblue,legend.title.txt = "Cum. cases per 10k pop.\n", legend.title.cex = 1, 
-           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
-points(-23.3, -36, pch = 16, col = 'white', cex = 2)
-text(-24, -35, 'No case reported', adj = 0)
+choroLayer(spdf = africa, var = "CaseperPop", colNA = "grey", legend.nodata = "Non WHO Afro country",
+           breaks=breaks, col=palblue,legend.title.txt = "", legend.title.cex = 1, 
+           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-35))
+points(-23.3, -31, pch = 16, col = 'white', cex = 2)
+text(-24, -30, 'No case reported', adj = 0)
 dev.off()
 
 
@@ -721,11 +729,11 @@ breaks[2]<-1
 palred <- brewer.pal(7, name = "Reds")
 palred[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_cum_deaths_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "total_deaths", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palred,legend.title.txt = "Cumulative Deaths\n", legend.title.cex = 1, 
-           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
-points(-23.3, -36, pch = 16, col = 'white', cex = 2)
-text(-24, -35, 'No death reported', adj = 0)
+choroLayer(spdf = africa, var = "total_deaths", colNA = "grey", legend.nodata = "Non WHO Afro country",
+           breaks=breaks, col=palred,legend.title.txt = "", legend.title.cex = 1, 
+           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-35))
+points(-23.3, -31, pch = 16, col = 'white', cex = 2)
+text(-24, -30, 'No death reported', adj = 0)
 dev.off()
 
 # Map DEATHS 10k ----
@@ -735,11 +743,11 @@ breaks[2]<-0.0000001
 palred <- brewer.pal(7, name = "Reds")
 palred[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_deaths_10k_pop_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "DeathsperPop", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palred,legend.title.txt = "Cum. deaths per 10k pop.\n", legend.title.cex = 1, 
-           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
-points(-23.3, -36, pch = 16, col = 'white', cex = 2)
-text(-24, -35, 'No death reported', adj = 0)
+choroLayer(spdf = africa, var = "DeathsperPop", colNA = "grey", legend.nodata = "Non WHO Afro country",
+           breaks=breaks, col=palred,legend.title.txt = "", legend.title.cex = 1, 
+           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-35))
+points(-23.3, -31, pch = 16, col = 'white', cex = 2)
+text(-24, -30, 'No death reported', adj = 0)
 dev.off()
 
 
@@ -754,11 +762,11 @@ palgreen <- brewer.pal(9, name = "Greens")
 palgreen <- rev(palgreen)
 palgreen[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_dt_cases_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "Dt_cases", colNA = "grey", legend.nodata = "Non-WHO Africa country",
-           breaks=breaks, col=palgreen, legend.title.txt = "Doubling time cases (days)\n", legend.title.cex = 1, 
-           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
-points(-23.3, -36, pch = 16, col = 'white', cex = 2)
-text(-24, -35, 'No case reported or < 7 days ago', adj = 0)
+choroLayer(spdf = africa, var = "Dt_cases", colNA = "grey", legend.nodata = "Non WHO Afro country",
+           breaks=breaks, col=palgreen, legend.title.txt = "Days", legend.title.cex = 1, 
+           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-35))
+points(-23.3, -31, pch = 16, col = 'white', cex = 2)
+text(-24, -30, 'No case reported or < 7 days ago', adj = 0)
 dev.off()
 
 # Map Dt DEATHS ----
@@ -768,11 +776,11 @@ palgreen <- brewer.pal(7, name = "Greens")
 palgreen <- rev(palgreen)
 palgreen[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_dt_deaths_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "Dt_deaths", colNA = "grey", legend.nodata = "Non-WHO Africa country",
-           breaks=breaks, col=palgreen,legend.title.txt = "Doubling time deaths (days)\n", legend.title.cex = 1, 
-           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
-points(-23.3, -36, pch = 16, col = 'white', cex = 2)
-text(-24, -35, 'No death reported or < 7 days ago', adj = 0)
+choroLayer(spdf = africa, var = "Dt_deaths", colNA = "grey", legend.nodata = "Non WHO Afro country",
+           breaks=breaks, col=palgreen,legend.title.txt = "Days", legend.title.cex = 1, 
+           legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-35))
+points(-23.3, -31, pch = 16, col = 'white', cex = 2)
+text(-24, -30, 'No death reported or < 7 days ago', adj = 0)
 dev.off()
 
 
@@ -797,23 +805,40 @@ image5_crop <- image_crop(image5, "1080x960+420+140")
 image6_crop <- image_crop(image6, "1080x960+420+140")
 
 #save to 3x2 plot-
+# png(file = paste0("./output/6Maps_WHO_Africa_", today, "_.png"), width=1080*2, height=960*3, pointsize=22)
+# par(mai=rep(0,4)) # no margins
+# layout(matrix(1:6, ncol=2, byrow=TRUE))
+# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+# rasterImage(image1_crop, 0, 0, 1,1)
+# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+# rasterImage(image3_crop, 0, 0, 1,1)
+# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+# rasterImage(image2_crop, 0, 0, 1,1)
+# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+# rasterImage(image4_crop, 0, 0, 1,1)
+# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+# rasterImage(image5_crop, 0, 0, 1,1)
+# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+# rasterImage(image6_crop, 0, 0, 1,1)
+# dev.off()
+
+
 png(file = paste0("./output/6Maps_WHO_Africa_", today, "_.png"), width=1080*2, height=960*3, pointsize=22)
-par(mai=rep(0,4)) # no margins
+par(mai=rep(0.5,4)) # no margins
 layout(matrix(1:6, ncol=2, byrow=TRUE))
-plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i', main = 'CUMULATIVE REPORTED CASES', cex.main = 2)
 rasterImage(image1_crop, 0, 0, 1,1)
-plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i', main = 'CUMULATIVE REPORTED DEATHS', cex.main = 2)
 rasterImage(image3_crop, 0, 0, 1,1)
-plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i', main = 'CUMULATIVE REPORTED CASES PER 10k POPULATION', cex.main = 2)
 rasterImage(image2_crop, 0, 0, 1,1)
-plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i', main = 'CUMULATIVE REPORTED DEATHS PER 10k POPULATION', cex.main = 2)
 rasterImage(image4_crop, 0, 0, 1,1)
-plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i', main = 'DOUBLING TIME CASES', cex.main = 2)
 rasterImage(image5_crop, 0, 0, 1,1)
-plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
+plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i', main = 'DOUBLING TIME DEATHS', cex.main = 2)
 rasterImage(image6_crop, 0, 0, 1,1)
 dev.off()
-
 
 
 # PAIRWISE TIME AHEAD COMPARISON ----
