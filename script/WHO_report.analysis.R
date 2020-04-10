@@ -15,7 +15,7 @@
 # 1) SET UP ----
 
 setwd('/Users/s1687811/Documents/GitHub/WHO_covid19_report/') 
-today<- Sys.Date() - 3  # Set date as to that of the data to fetch.
+today<- Sys.Date() -1 # Set date as to that of the data to fetch.
 its = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -53,7 +53,8 @@ read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet 
 # After modifying "Côte d'Ivoire" into "Cote d'Ivoire" (without the ^), then the variable "country" of the who.info.tab is the one that matches the countries name of the data
 d<- # Get cumulative case counts data
   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative cases') %>%
-  rename(`Cote d'Ivoire` = `Côte d’Ivoire`) %>%
+  rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
+         `Sao Tome and Principe` = `São Tomé and Príncipe`) %>%
   mutate(date = as.Date(date)) %>%
   as.data.frame() #%>%
   #select(c(date, which(colnames(.) %in% who.info.tab$country)))
@@ -62,7 +63,8 @@ d.long<- d %>% gather('country', 'cumNumCases', 2:ncol(d)) # long version, more 
 
 d.deaths<-  # Get cumulative deaths  data
   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative deaths') %>%
-  rename(`Cote d'Ivoire` = `Côte d’Ivoire`) %>%
+  rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
+         `Sao Tome and Principe` = `São Tomé and Príncipe`) %>%
   mutate(date = as.Date(date)) %>%
   as.data.frame()
 
@@ -70,7 +72,8 @@ d.deaths.long<-  d.deaths %>% gather('country', 'cumNumDeaths', 2:ncol(d.deaths)
 
 d.10k.log.long<- # Cumulative cases per 10k, log10()-ed
   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative cases per 10k popula') %>%
-  rename(`Cote d'Ivoire` = `Côte d’Ivoire`) %>%
+  rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
+         `Sao Tome and Principe` = `São Tomé and Príncipe`) %>%
   mutate(date = as.Date(date)) %>%
   as.data.frame() %>%
   gather('country', 'cumcases_10k', 2:ncol(.)) %>%
@@ -84,7 +87,8 @@ d.10k.log<- # Wide version of the above
 
 d.deaths.10k.log.long<- # Cumulative deaths per 10k population
   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative deaths per 10k popul') %>%
-  rename(`Cote d'Ivoire` = `Côte d’Ivoire`) %>%
+  rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
+         `Sao Tome and Principe` = `São Tomé and Príncipe`) %>%
   mutate(date = as.Date(date)) %>%
   as.data.frame() %>%
   gather('country', 'cumdeaths_10k', 2:ncol(.)) %>%
@@ -99,7 +103,8 @@ d.deaths.10k.log<- # Wide version of the above
 
 d.deaths.10k<- # Cumulative deaths per 10k population
   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative deaths per 10k popul') %>%
-  rename(`Cote d'Ivoire` = `Côte d’Ivoire`) %>%
+  rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
+         `Sao Tome and Principe` = `São Tomé and Príncipe`) %>%
   mutate(date = as.Date(date)) %>%
   as.data.frame()
 
@@ -140,14 +145,23 @@ sims.store<- vector('list', length = length(regions))
 for(r in 1:length(regions)){
   
   # Get data for focal country, rename cumulative cases columns "cumNumCases", to pass it through sim.epi() function + # Additional step: cleaning
+  
   d.select<- 
     d[,c(1, which(colnames(d) == regions[r]))] %>%
     rename(cumNumCases = paste(regions[r])) %>%  
     mutate(numNewCases = c(cumNumCases[1], diff(cumNumCases))) %>%
     select(date, numNewCases)
   
-  d.clean <-
-    data.cleaner(d.select) %>%
+
+  d.clean.0<- d.select
+  
+  while(sum(d.clean.0[,2] < 0) != 0){ # Re-iterate smoothing until no negative point is left!
+    
+    d.clean.0<- data.cleaner(d.clean.0)
+    
+  }
+  
+  d.clean <- d.clean.0 %>%
     mutate(cumNumCases = cumsum(numNewCases)) %>%  
     select(date, cumNumCases) %>%
     as.data.frame()
@@ -205,39 +219,12 @@ for(r in 1:length(regions)){
   
 } 
 
-
-Td.report<-
-  Td.report %>%
-  rename(country = variable)
-
-
-Td.report.clean<-  # Formatted version to output in the report
-  Td.report %>%
-  left_join(who.info.tab, by = 'country') %>%
-  select(full_name, Td.obs, ci.low, ci.upp) %>%
-  rename(Country = full_name,
-         `Incidence doubling time (days)` = Td.obs)
-
+Td.report %<>% rename(country = variable)
 
 # At present (early April) there are still very few cases in most countries.
 # This causes issue either to compute Td (divisions by zero) or with the poisson error simulation (poisson process with 0 mean most of the time = generate only zero data)
 # Identify all countries for which there were an issue arising from this, causing numerical issue either in Td computation or in the 95%CI computation, and set both Td and CIs to NA, as these are not reliable.
 # Do this for the reported table only. For the figure, these will get trimed out anyway ...? # TOREVIEW
-has.pb<- which(
-  Td.report.clean$ci.upp %in% c(NA, 'NA', Inf, 'Inf') |
-    Td.report.clean$ci.low %in% c(NA, 'NA', Inf, 'Inf') |
-    Td.report.clean$`Incidence doubling time (days)` %in% c(NA, 'NA', Inf, 'Inf')
-  ) # identify countrys with issue
-
-
-Td.report.clean[has.pb,2:4]<- 'NA' # Set entire row as NA
-
-Td.report.clean2<- # For better information convey, arrange by doubling Time
-  Td.report.clean %>%
-  arrange(as.numeric(`Incidence doubling time (days)`))
-
-
-
 
 # DOUBLING TIMES: Deaths----
 # This sections works exactly as the previous one but for deaths.
@@ -259,13 +246,22 @@ for(r in 1:length(regions)){
     mutate(numNewCases = c(cumNumCases[1], diff(cumNumCases))) %>%
     select(date, numNewCases)
   
-  d.clean <-
-    data.cleaner(d.select) %>%
+  
+  d.clean.0<- d.select
+  
+  while(sum(d.clean.0[,2] < 0) != 0){ # Re-iterate smoothing until no negative point is left!
+    
+    d.clean.0<- data.cleaner(d.clean.0)
+    
+  }
+  
+  
+  d.clean <- d.clean.0 %>%
     mutate(cumNumCases = cumsum(numNewCases)) %>%  
     select(date, cumNumCases) %>%
     as.data.frame()
   
-  
+
   d.clean.sim<- sim.epi(d.clean, its = its, plotsim = FALSE) # Simulate poisson error on raw DEATHS
   
   d.clean.sim.cum<-
@@ -312,10 +308,7 @@ for(r in 1:length(regions)){
   
 } 
 
-
-Td.report.deaths <-
-  Td.report.deaths %>%
-  rename(country = variable)
+Td.report.deaths %<>% rename(country = variable)
 
 
 # The TWO NEXT SECTIONS are to collect the Last day incidence of the observed data but ALSO OF THE SIMULATED DATA
@@ -350,15 +343,15 @@ dat.cumsumraw.df<- do.call('rbind', dat.cumsumraw) %>%
   select(country, cumNumCase_raw, ci.low, ci.upp) %>%
   arrange(-cumNumCase_raw) %>%
   rename(country = country,
-         `Cum. Incidence` = cumNumCase_raw)
-dat.cumsumraw.df$`Cum. Incidence`<- formatC(dat.cumsumraw.df$`Cum. Incidence`, digits = 0, format = "f") # Format numbers to be with 1 digit, even those with 0 digits (e.g. 4 --> 4.0)
+         `Cum. reported cases` = cumNumCase_raw)
+dat.cumsumraw.df$`Cum. reported cases`<- formatC(dat.cumsumraw.df$`Cum. reported cases`, digits = 0, format = "f") # Format numbers to be with 1 digit, even those with 0 digits (e.g. 4 --> 4.0)
 dat.cumsumraw.df$ci.low<- formatC(dat.cumsumraw.df$ci.low, digits = 0, format = "f")
 dat.cumsumraw.df$ci.upp<- formatC(dat.cumsumraw.df$ci.upp, digits = 0, format = "f")
 dat.cumsumraw.df<- dat.cumsumraw.df %>%
   left_join(who.info.tab, by = 'country') %>%
-  select(full_name, `Cum. Incidence`, ci.low, ci.upp) %>%
+  select(full_name, `Cum. reported cases`, ci.low, ci.upp) %>%
   rename(Country = full_name)
-dat.cumsumraw.df$`Cum. Incidence`[dat.cumsumraw.df$`Cum. Incidence` == 'NA']<- 0
+dat.cumsumraw.df$`Cum. reported cases`[dat.cumsumraw.df$`Cum. reported cases` == 'NA']<- 0
 
 
 # Last day Incidence & CI 10k ----
@@ -385,15 +378,15 @@ dat.cumsum10k.df<- do.call('rbind', dat.cumsum10k) %>%
   select(country, cumNumCase_10k, ci.low, ci.upp) %>%
   arrange(-cumNumCase_10k) %>%
   rename(country = country,
-         `Cum. Incidence per 10k pop.` = cumNumCase_10k)
-dat.cumsum10k.df$`Cum. Incidence per 10k pop.`<- formatC(dat.cumsum10k.df$`Cum. Incidence per 10k pop.`, digits = 4, format = "f")
+         `Cum. reported cases per 10k pop.` = cumNumCase_10k)
+dat.cumsum10k.df$`Cum. reported cases per 10k pop.`<- formatC(dat.cumsum10k.df$`Cum. reported cases per 10k pop.`, digits = 4, format = "f")
 dat.cumsum10k.df$ci.low<- formatC(dat.cumsum10k.df$ci.low, digits = 4, format = "f")
 dat.cumsum10k.df$ci.upp<- formatC(dat.cumsum10k.df$ci.upp, digits = 4, format = "f")
 dat.cumsum10k.df<- dat.cumsum10k.df %>%
   left_join(who.info.tab, by = 'country') %>%
-  select(full_name, `Cum. Incidence per 10k pop.`, ci.low, ci.upp) %>%
+  select(full_name, `Cum. reported cases per 10k pop.`, ci.low, ci.upp) %>%
   rename(Country = full_name)
-dat.cumsum10k.df$`Cum. Incidence per 10k pop.`[dat.cumsum10k.df$`Cum. Incidence per 10k pop.` == '   NA']<- 0
+dat.cumsum10k.df$`Cum. reported cases per 10k pop.`[dat.cumsum10k.df$`Cum. reported cases per 10k pop.` == '   NA']<- 0
 
 
 
@@ -581,13 +574,14 @@ plot.country.2<- function(c){
   for(c2 in 2:ncol(test.for.basegraphic)){
     lines(test.for.basegraphic[,c2] ~ c(0,1), lwd = 1.5, col = 'grey')
   }
+  abline(v = c(0,1), h = log10(seq(1:10)), col = 'lightgrey', lty = 'dotted')  
+  
   lines(test.for.basegraphic[,c] ~ c(0,1), lwd = 3)
   points(test.for.basegraphic[,c] ~ c(0,1), cex = 1.2, pch = 16)
   axis(2, at = log10(seq(1:10)), labels = 10^(log10(seq(1:10))), font = y.font.fbc, cex.axis = y.cex.fbc)
   
   axis(1, at = c(0,1), labels = format(as.Date(test.for.basegraphic$date), date.format), font = x.font.fbc, cex.axis = x.cex.fbc)
-  abline(v = c(0,1), h = log10(seq(1:10)), col = 'lightgrey', lty = 'dotted')  
-  
+
   # FAN PLOTS DEATHS ----
   
   # Get the cumulative deaths for today and 7 days ago
@@ -640,32 +634,38 @@ plot.country.2<- function(c){
   for(c2 in 2:ncol(test.for.basegraphic.deaths)){
     lines(test.for.basegraphic.deaths[,c2] ~ c(0,1), lwd = 1.5, col = 'grey')
   }
+  abline(v = c(0,1), h = log10(seq(1:10)), col = 'lightgrey', lty = 'dotted')  
+  
   lines(test.for.basegraphic.deaths[,c] ~ c(0,1), lwd = 3)
   points(test.for.basegraphic.deaths[,c] ~ c(0,1), cex = 1.2, pch = 16)
   axis(2, at = log10(seq(1:10)), labels = 10^(log10(seq(1:10))), font = y.font.fbc, cex.axis = y.cex.fbc)
   axis(1, at = c(0,1), labels = format(as.Date(test.for.basegraphic$date), date.format), font = x.font.fbc, cex.axis = x.cex.fbc)
-  abline(v = c(0,1), h = log10(seq(1:10)), col = 'lightgrey', lty = 'dotted')  
-  
+
   
   # ADD LABELS ----
   # Y-labels
   mtext('Cumulative', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.85)
   mtext('Per 10k pop.', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.5)
-  mtext('Log10 increase', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.15)
+  mtext('Relative increase', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.15)
   
   # X-labels
-  mtext('Incidence', side = 3, line = xTOPlab.line.fbc, outer = TRUE, col = 'black', cex = xTOPlab.cex.fbc, font = xTOPlab.f.fbc, at = 0.25)
+  mtext('Cases', side = 3, line = xTOPlab.line.fbc, outer = TRUE, col = 'black', cex = xTOPlab.cex.fbc, font = xTOPlab.f.fbc, at = 0.25)
   mtext('Deaths', side = 3, line = xTOPlab.line.fbc, outer = TRUE, col = 'black', cex = xTOPlab.cex.fbc, font = xTOPlab.f.fbc, at = 0.77)
  
   
-   mtext(paste0('Date (dd',str_sub(date.format, 3, 3),'mm)'), side = 1, line = xBOTTOMlab.line.fbc, outer = TRUE, col = 'black', cex = xBOTTOMlab.cex.fbc, font = xBOTTOMlab.f.fbc)
+   mtext(paste0('Date (dd',str_sub(date.format, 3, 3),'mm)'), side = 1, line = xBOTTOMlab.line.fbc, outer = TRUE, col = 'black', cex = xBOTTOMlab.cex.fbc, font = xBOTTOMlab.f.fbc, at = 0.25)
   
+   mtext(paste0('Date (dd',str_sub(date.format, 3, 3),'mm)'), side = 1, line = xBOTTOMlab.line.fbc, outer = TRUE, col = 'black', cex = xBOTTOMlab.cex.fbc, font = xBOTTOMlab.f.fbc, at = 0.77)
+   
+   
   # TITLE
   mtext(paste(who.info.tab[match(countries[c], who.info.tab$country), 'full_name']), side = 3, line = 2, outer = TRUE, col = 'black', cex = 2, font = 2)
   
 }
 
 # DATA FOR MAPS ----
+
+
 
 who_dt_data<- # Assemble the doubling times formatted for maps plotting
 left_join(who.info.tab[,c('ISO3', 'country')], Td.report[,1:2], by = 'country') %>%
@@ -694,8 +694,10 @@ palblue <- brewer.pal(9, name = "Blues")
 palblue[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_cum_cases_', today, '_.png'), width=1920, height=1240, pointsize = 22)
 choroLayer(spdf = africa, var = "total_cases", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palblue,legend.title.txt = "Cumulative Cases", legend.title.cex = 1,
+           breaks=breaks, col=palblue,legend.title.txt = "Cumulative Cases\n", legend.title.cex = 1,
            legend.values.cex = 1, legend.pos = c(-30,-40))
+points(-23.3, -36, pch = 16, col = 'white', cex = 2)
+text(-24, -35, 'No case reported', adj = 0)
 dev.off()
 
 # Map CASES 10k ----
@@ -706,8 +708,10 @@ palblue <- brewer.pal(9, name = "Blues")
 palblue[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_cases_10k_pop_', today, '_.png'), width=1920, height=1240, pointsize = 22)
 choroLayer(spdf = africa, var = "CaseperPop", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palblue,legend.title.txt = "Cum. cases per 10k pop.", legend.title.cex = 1, 
+           breaks=breaks, col=palblue,legend.title.txt = "Cum. cases per 10k pop.\n", legend.title.cex = 1, 
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
+points(-23.3, -36, pch = 16, col = 'white', cex = 2)
+text(-24, -35, 'No case reported', adj = 0)
 dev.off()
 
 
@@ -718,8 +722,10 @@ palred <- brewer.pal(7, name = "Reds")
 palred[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_cum_deaths_', today, '_.png'), width=1920, height=1240, pointsize = 22)
 choroLayer(spdf = africa, var = "total_deaths", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palred,legend.title.txt = "Cumulative Deaths", legend.title.cex = 1, 
+           breaks=breaks, col=palred,legend.title.txt = "Cumulative Deaths\n", legend.title.cex = 1, 
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
+points(-23.3, -36, pch = 16, col = 'white', cex = 2)
+text(-24, -35, 'No death reported', adj = 0)
 dev.off()
 
 # Map DEATHS 10k ----
@@ -730,13 +736,17 @@ palred <- brewer.pal(7, name = "Reds")
 palred[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_deaths_10k_pop_', today, '_.png'), width=1920, height=1240, pointsize = 22)
 choroLayer(spdf = africa, var = "DeathsperPop", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palred,legend.title.txt = "Cum. deaths per 10k pop.", legend.title.cex = 1, 
+           breaks=breaks, col=palred,legend.title.txt = "Cum. deaths per 10k pop.\n", legend.title.cex = 1, 
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
+points(-23.3, -36, pch = 16, col = 'white', cex = 2)
+text(-24, -35, 'No death reported', adj = 0)
 dev.off()
 
 
 # Map Dt CASES ----
 africa@data %<>% left_join(who_dt_data, by=c("ISO_A3"="countryterritoryCode"))
+
+
 
 breaks <- classIntervals(africa@data$Dt_cases, n = 9, style = "jenks", na.rm=T)$brks
 breaks[2]<-0.00001
@@ -744,9 +754,11 @@ palgreen <- brewer.pal(9, name = "Greens")
 palgreen <- rev(palgreen)
 palgreen[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_dt_cases_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "Dt_cases", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palgreen,legend.title.txt = "Doubling time cases (days)", legend.title.cex = 1, 
+choroLayer(spdf = africa, var = "Dt_cases", colNA = "grey", legend.nodata = "Non-WHO Africa country",
+           breaks=breaks, col=palgreen, legend.title.txt = "Doubling time cases (days)\n", legend.title.cex = 1, 
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
+points(-23.3, -36, pch = 16, col = 'white', cex = 2)
+text(-24, -35, 'No case reported or < 7 days ago', adj = 0)
 dev.off()
 
 # Map Dt DEATHS ----
@@ -756,9 +768,11 @@ palgreen <- brewer.pal(7, name = "Greens")
 palgreen <- rev(palgreen)
 palgreen[1]<-"#FFFFFF"
 png(filename = paste0('./output/Map_dt_deaths_', today, '_.png'), width=1920, height=1240, pointsize = 22)
-choroLayer(spdf = africa, var = "Dt_deaths", colNA = "grey", legend.nodata = "Non WHO-Africa country",
-           breaks=breaks, col=palgreen,legend.title.txt = "Doubling time deaths (days)", legend.title.cex = 1, 
+choroLayer(spdf = africa, var = "Dt_deaths", colNA = "grey", legend.nodata = "Non-WHO Africa country",
+           breaks=breaks, col=palgreen,legend.title.txt = "Doubling time deaths (days)\n", legend.title.cex = 1, 
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-40))
+points(-23.3, -36, pch = 16, col = 'white', cex = 2)
+text(-24, -35, 'No death reported or < 7 days ago', adj = 0)
 dev.off()
 
 
@@ -805,7 +819,8 @@ dev.off()
 # PAIRWISE TIME AHEAD COMPARISON ----
 # d.10k<- # Cumulative cases per 10k
 #   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative cases per 10k popula') %>%
-#   rename(`Cote d'Ivoire` = `Côte d’Ivoire`) %>%
+#     rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
+# `Sao Tome and Principe` = `São Tomé and Príncipe`) %>%
 #   mutate(date = as.Date(date)) %>%
 #   as.data.frame()
 # 

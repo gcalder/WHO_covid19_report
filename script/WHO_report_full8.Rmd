@@ -8,8 +8,8 @@ header-includes:
 - \newcommand{\blandscape}{\begin{landscape}}
 - \newcommand{\elandscape}{\end{landscape}}
 output:
-  word_document: default
   pdf_document: null
+  word_document: default
 subtitle: 10/04/2020
 extra_dependencies: float
 ---
@@ -25,7 +25,7 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today<- Sys.Date() - 3
+today<- Sys.Date() - 1
 library(plyr)
 
 load(paste0('/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/WHO_report_analysis_', as.character(today), '.RData'))
@@ -136,12 +136,12 @@ y.cex.fbc = 1.2
 
 ylab.cex.fbc = 1.2
 ylab.f.fbc = 2
-ylab.line.fbc = 1 
+ylab.line.fbc = 0.7
 
 
 xTOPlab.cex.fbc = 1.2
 xTOPlab.f.fbc = 2
-xTOPlab.line.fbc = 0
+xTOPlab.line.fbc = -0.5
 
 
 xBOTTOMlab.cex.fbc = 1.2
@@ -156,7 +156,7 @@ y.axti.fbc.rawDeaths = 5
 y.axti.fbc.logCases = 1
 y.axti.fbc.logDeaths = 1
 
-xseq.fbc = seq.Date(from = min(d$date), to = max(d$date), by = x.axti.fbc)
+xseq.fbc = seq.Date(from = min(d$date), to = max(d$date), length.out = 5)
 
 # y-scale for raw cases
 thirdWorst<- rev(sort(tail(d, 1)[,-1]))[[3]]
@@ -218,9 +218,9 @@ We compare the size and rate of increase of the COVID-19 epidemic across the cou
 The maps below summarise the in-country situations:  
 &nbsp;
  
-* Top row: cumulated reported cases (left) and deaths (right).  
-* Middle row: cumulated reported cases (left) and deaths (right) per 10,000 population on a log10 scale.  
-* Bottom row: overview of doubling time of cumulative incidence (left) and deaths (right). Doubling times are estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.
+* Top row: cumulative reported cases (left) and deaths (right).  
+* Middle row: cumulative reported cases (left) and deaths (right) per 10,000 population on a log10 scale.  
+* Bottom row: overview of doubling time of cumulative reported cases (left) and deaths (right). Doubling times are estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.
 
 \newpage
  
@@ -274,9 +274,9 @@ ggplot(upper, aes(x = `compared to`, y = `focal country`, fill= `Time difference
 As of `r format(today, "%d/%m/%Y")`, each panel below shows for each country:  
 &nbsp;
  
-* Top row: cumulated reported cases (left) and deaths (right).  
-* Middle row: cumulated reported cases (left) and deaths (right) per 10,000 population on a log10 scale.   
-* Bottom row: log10 increase in number of cases (left) and deaths (right) based on the doubling times (of incidence and deaths respectively) estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  
+* Top row: cumulative reported cases (left) and deaths (right).  
+* Middle row: cumulative reported cases (left) and deaths (right) per 10,000 population on a log10 scale.   
+* Bottom row: relative increase in number of cases (left) and deaths (right) based on the doubling times (of cases and deaths respectively) estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  
 
 
 \newpage
@@ -330,7 +330,7 @@ plot.country.2(c = 07)
 
 \newpage
 
-## Cameroon
+## Cabe Verde
 ```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country.2(c = 08)
@@ -338,7 +338,7 @@ plot.country.2(c = 08)
 
 \newpage
 
-## Cape Verde
+## Cameroon
 ```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country.2(c = 09)
@@ -570,7 +570,7 @@ plot.country.2(c = 37)
 
 \newpage
 
-## Sao Tome y Principe
+## Sao Tome and Principe
 ```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
 countries<- colnames(d)
 plot.country.2(c = 38)
@@ -686,7 +686,7 @@ Confidence intervals calculated using bootstrapping of a simulated dataset with 
 
 \newpage
 
-### Cumulative incidence
+### Cumulative reported cases
 &nbsp;
 ```{r TabIncidenceRaw, results = 'asis', echo = FALSE}
 # Table produced in the analysis script, as it requires the 95%CI, extracted from the simulations
@@ -696,7 +696,7 @@ kable(dat.cumsumraw.df)
 
 \newpage
 
-### Cumulative incidence per 10,000 population
+### Cumulative reported cases per 10,000 population
 
 &nbsp;
 
@@ -713,7 +713,11 @@ kable(dat.cumsum10k.df)
 ```{r TabDeathsRaw, results = 'asis', echo = FALSE}
 # This does not report CI so directly get it from the data tables
 
-tab.total.deaths<- gather(tail(d.deaths, 1), 'Country', 'Cum. Num. Deaths', 2:ncol(d.deaths)) %>% select(-date) %>% arrange(-`Cum. Num. Deaths`)
+tab.total.deaths<-
+  gather(tail(d.deaths, 1), 'Country', 'Cum. Num. Deaths', 2:ncol(d.deaths)) %>%
+  select(-date) %>%
+  arrange(-`Cum. Num. Deaths`) %>%
+  rename(`Cum. reported deaths` = `Cum. Num. Deaths`)
 
 kable(tab.total.deaths)
 ```
@@ -726,7 +730,8 @@ kable(tab.total.deaths)
 ```{r TabDeaths10k, results = 'asis', echo = FALSE}
 # This does not report CI so directly get it from the data tables
 
-tab.total.deaths.10k<- gather(tail(d.deaths.10k, 1), 'Country', 'Cum. Num. Deaths per 10k pop.', 2:ncol(d.deaths.10k)) %>% select(-date) %>% arrange(-`Cum. Num. Deaths per 10k pop.`) %>% mutate(`Cum. Num. Deaths per 10k pop.` = round(`Cum. Num. Deaths per 10k pop.`, 4))
+tab.total.deaths.10k<- gather(tail(d.deaths.10k, 1), 'Country', 'Cum. Num. Deaths per 10k pop.', 2:ncol(d.deaths.10k)) %>% select(-date) %>% arrange(-`Cum. Num. Deaths per 10k pop.`) %>% mutate(`Cum. Num. Deaths per 10k pop.` = round(`Cum. Num. Deaths per 10k pop.`, 4)) %>%
+  rename(`Cum. reported deaths per 10k pop.` = `Cum. Num. Deaths per 10k pop.`)
 
 kable(tab.total.deaths.10k)
 
@@ -734,20 +739,41 @@ kable(tab.total.deaths.10k)
 
 \newpage
 
-### Doubling time (incidence)
+### Doubling time (cases)
 &nbsp;
 
+The following two tables summarise the doubling times (for cumulative reported cases and deaths respectively) reported in the above figures. Note that a "NA" value notifies countries where no cases/deaths have been reported yet or have if the first cases/deaths occured less than 7 days ago, preventing the computation of doubling time over the chosen 7 day period. A "Inf" value notifies countries where cases/deaths have been reported more than 7 days ago but have not increased since, leading to a zero denominator quotient in the doubling time calculation.
+
+\newpage
 
 ```{r DtTabIncidence, results = 'asis', echo = FALSE}
+Td.report.appendix<- 
+Td.report[order(Td.report$Td.obs, na.last = TRUE),] %>%
+  rename(Country = country,
+         `Doubling time (days)` = Td.obs,
+         `95%CI lower` = ci.low,
+         `95%CI upper` = ci.upp) %>%
+  select(-t1, -t2) %>%
+  as.data.frame()
 
-kable(Td.report[order(Td.report$Td.obs, na.last = TRUE),])
+kable(Td.report.appendix, row.names = FALSE)
 ```
 
 \newpage
 
 ### Doubling time (deaths)
 ```{r DtTabDeaths, results = 'asis', echo = FALSE}
-kable(Td.report.deaths[order(Td.report.deaths$Td.obs, na.last = TRUE),])
+
+Td.report.appendix.deaths<- 
+Td.report.deaths[order(Td.report.deaths$Td.obs, na.last = TRUE),] %>%
+  rename(Country = country,
+         `Doubling time (days)` = Td.obs,
+         `95%CI lower` = ci.low,
+         `95%CI upper` = ci.upp) %>%
+  select(-t1, -t2) %>%
+  as.data.frame()
+
+kable(Td.report.appendix.deaths, row.names = FALSE)
 
 ```
 

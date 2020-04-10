@@ -130,15 +130,20 @@ mytheme_inset<- theme_bw()+
     plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
 
 
+
 data.cleaner<- function(df){
   
   df$date<- as.Date(df$date); df.clean<- df
   
   # Flag problematic datapoints
-  negs<- df$date[which(df$numNewCases < 0)]; flags<- c(negs, negs - 1); df.clean$flag<- ifelse(df.clean$date %in% flags, 'flag', 'ok')
+  negs<- df$date[which(df$numNewCases < 0)];
+  flags<- c(negs, negs - 1);
+  df.clean$flag<- ifelse(df.clean$date %in% flags, 'flag', 'ok')
   
   # Identify each "streak"" to be able to identify groups of days to average over
-  df.clean$streak<- NA; streak<- 1; df.clean$streak[1]<- streak
+  df.clean$streak<- NA;
+  streak<- 1;
+  df.clean$streak[1]<- streak
   for(i in 2:nrow(df.clean)){
     
     if(df.clean$flag[i] == df.clean$flag[i-1]){
