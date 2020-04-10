@@ -9,8 +9,8 @@ header-includes:
 - \newcommand{\elandscape}{\end{landscape}}
 - \renewcommand{\contentsname}{Contents (click to access)}
 output:
-  pdf_document: null
   word_document: default
+  pdf_document: null
 subtitle: 10/04/2020
 extra_dependencies: float
 ---
