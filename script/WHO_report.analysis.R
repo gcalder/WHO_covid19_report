@@ -3,15 +3,6 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
-# This R script runs all the analyses for the WHO report
-# It outputs:
-#   A csv file with all the Td computed
-#   PNGs file of the maps (individual and combined)
-#   The R session as an RData object
-# The automated report (Rmarkdown doc) then load this RData object to run plots commands in it
-
-
-
 # 1) SET UP ----
 
 setwd('/Users/s1687811/Documents/GitHub/WHO_covid19_report/') 
@@ -39,8 +30,10 @@ library(magick)
 
 # LOADING DATA ----
 
+# Load data and make various versions of them (wide, long, log10, linear, etc. that are used later in the script or in the Rmd  file)
+
 # WHO list of countries & their popsize.
-# Various encoding of the countries name used for different purpose (match various data sources, for maps, shortenned for figures etc.)
+# Various encoding of the countries name used for different purpose (match various data sources, for maps, shortened for figures etc.)
 who.info.tab<-
 read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'population counts per country')[,-1] %>%
   rename(ISO3 = countryterritoryCode,
@@ -50,7 +43,9 @@ read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet 
 
 
 # All columns in d are WHO countries.
-# After modifying "Côte d'Ivoire" into "Cote d'Ivoire" (without the ^), then the variable "country" of the who.info.tab is the one that matches the countries name of the data
+# After modifying "Côte d'Ivoire" into "Cote d'Ivoire" (without the ^), and `São Tomé and Príncipe into Sao Tome and Principe, then the variable "country" of the who.info.tab is the one that matches the countries name of the data
+# + formatting variable names to fit in rest of the script
+
 d<- # Get cumulative case counts data
   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative cases') %>%
   rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
@@ -58,6 +53,7 @@ d<- # Get cumulative case counts data
   mutate(date = as.Date(date)) %>%
   as.data.frame() #%>%
   #select(c(date, which(colnames(.) %in% who.info.tab$country)))
+
 
 d.long<- d %>% gather('country', 'cumNumCases', 2:ncol(d)) # long version, more practical for certain analyses/figures
 
@@ -112,13 +108,15 @@ d.deaths.10k<- # Cumulative deaths per 10k population
 who_data<- read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'data for map') 
 
 
-#Map with countries in WHO-Africa for front page.
-africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
-africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
-africa@data$WHOCountry <- ifelse(is.na(africa@data$location),0,1)
-png(file = "input_files/WHO_Africa3.png", width=3246, height=2880, pointsize=22)
-typoLayer(spdf = africa, var = "WHOCountry", col = c("darkorange2", "white"), legend.pos = "n")
-dev.off()
+# I ran this only once, to produce the WHO_Africa3.png in ./input_files.
+# Can be re-run to produce the same map but with a different color etc.
+# Map with countries in WHO-Africa for front page.
+# africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
+# africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
+# africa@data$WHOCountry <- ifelse(is.na(africa@data$location),0,1)
+# png(file = "input_files/WHO_Africa3.png", width=3246, height=2880, pointsize=22)
+# typoLayer(spdf = africa, var = "WHOCountry", col = c("darkorange2", "white"), legend.pos = "n")
+# dev.off()
 
 
 # DOUBLING TIMES: Incidence----
@@ -144,8 +142,7 @@ sims.store<- vector('list', length = length(regions))
 
 for(r in 1:length(regions)){
   
-  # Get data for focal country, rename cumulative cases columns "cumNumCases", to pass it through sim.epi() function + # Additional step: cleaning
-  
+  # Get data for focal country, rename variables as necessary to pass it through data.cleaner()
   d.select<- 
     d[,c(1, which(colnames(d) == regions[r]))] %>%
     rename(cumNumCases = paste(regions[r])) %>%  
@@ -153,14 +150,15 @@ for(r in 1:length(regions)){
     select(date, numNewCases)
   
 
+  # Pass it through data.cleaner() to smooth over negative numbers (if any!)
   d.clean.0<- d.select
-  
   while(sum(d.clean.0[,2] < 0) != 0){ # Re-iterate smoothing until no negative point is left!
     
     d.clean.0<- data.cleaner(d.clean.0)
     
   }
   
+  # Output of data.cleaner() is number of new cases. Need cumulative cases for sim.epi()
   d.clean <- d.clean.0 %>%
     mutate(cumNumCases = cumsum(numNewCases)) %>%  
     select(date, cumNumCases) %>%
@@ -178,9 +176,9 @@ for(r in 1:length(regions)){
     d.clean.sim %>%
     select(-date, -cumNumCases) %>% # Simulated data are number of new cases. Keep the 'numNewCases' version of the original (observed) data to treat everything the same way
     mutate_all(~ cumsum(.) * (10000/(who.info.tab[who.info.tab$country == regions[r], 'popsize']))) %>% # 10k pop normalisation
-    rename(cumNumCases = numNewCases) %>% # 'numNewCases' (observed) now is back to 'cumNumCases'
-    cbind(date = d.clean.sim$date) %>% # append back the dates
-    select(c(ncol(.), seq(1, ncol(.)-1))) # re-order columns to fit in the compute.td() function
+    rename(cumNumCases = numNewCases) %>%  # 'numNewCases' (observed) now is back to 'cumNumCases'
+    cbind(date = d.clean.sim$date) %>%     # append back the dates
+    select(c(ncol(.), seq(1, ncol(.)-1)))  # re-order columns to fit in the compute.td() function
   
 
   d.clean.sim.cum.list<- # Transform into a list to sapply compute.td() on each dataset
@@ -194,7 +192,7 @@ for(r in 1:length(regions)){
                t1 = t1, t2 = t2)
   
   # Observed and bootstrap distribution of Tds
-  Td.obs<- as.numeric(Tds['cumNumCases']) # First element of the list of Tds is the observed data
+  Td.obs<- as.numeric(Tds['cumNumCases'])  # First element of the list of Tds is the observed data
   Td.bootstrap<- as.numeric(Tds[-which(names(Tds) == 'cumNumCases')]) # And those are the simulated = bootstrap distribution
   Td.bootstrap<- Td.bootstrap[!is.na(Td.bootstrap == TRUE)] # NAs come from cases where there were still zero cases observed at t1 in a simulated dataset. Normal to happen when still very low number of cases observed. Becomes less of a problem as number of cases rise.
   
@@ -221,10 +219,6 @@ for(r in 1:length(regions)){
 
 Td.report %<>% rename(country = variable)
 
-# At present (early April) there are still very few cases in most countries.
-# This causes issue either to compute Td (divisions by zero) or with the poisson error simulation (poisson process with 0 mean most of the time = generate only zero data)
-# Identify all countries for which there were an issue arising from this, causing numerical issue either in Td computation or in the 95%CI computation, and set both Td and CIs to NA, as these are not reliable.
-# Do this for the reported table only. For the figure, these will get trimed out anyway ...? # TOREVIEW
 
 # DOUBLING TIMES: Deaths----
 # This sections works exactly as the previous one but for deaths.
@@ -390,85 +384,17 @@ dat.cumsum10k.df$`Cum. reported cases per 10k pop.`[dat.cumsum10k.df$`Cum. repor
 
 
 
-# By-COUNTRY PLOTS FUNC (1)  ----
+
+# By-COUNTRY PLOTS FUNC (2) ----
+
 # I could not find a way to loop over the figure-producing for each country while creating new header each time in the Rmarkdown.
 # I had to have one r code chunck per country, under 47 headers, in order to have the countries listed in the Table of Content.
 # The hack I got away with  was wrapping this code into a "function", which only takes as argument the index "c" corresponding to the columns in the dataframe for which to plot the data (so we start at c = 2, because the first column is the date in the data).
 # It is quite hacky/poor-quick-fix, since many variables in it are not even passed as argument of the function, but are environement variables defined in the Rmarkdown. Hence, if you change those variables in the Rmarkdown doc or do not define them, this piece of code will not work.
-plot.country<- function(c){
-  
-  # SET UP THE PLOT AREA
-  par(mfrow = c(2,2),
-      oma = c(2,2,4,1) + 0.1,
-      mar = c(2,2,1,1) + 0.1)
-  
-  
-  # RAW CASES
-  # Set plot, add axes, add background gridlines
-  plot('', xlim = range(xseq.fbc), ylim = range(yseq.raw.cases), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
-  axis(1, at = xseq.fbc, labels = format(xseq.fbc, date.format), font = x.font.fbc, cex.axis = x.cex.fbc)
-  axis(2, at = yseq.raw.cases, font = y.font.fbc, cex.axis = y.cex.fbc)
-  abline(v = xseq.fbc, h = yseq.raw.cases, col = 'lightgrey', lty = 'dotted')
-  for(c2 in 2:ncol(d)){
-    lines(d[,c2] ~ d$date, lwd = 1.5, col = 'grey')
-  } # Draw lines + overplot focal country line
-  lines(d[,c] ~ d$date, lwd = 3)
-  
-  
-  # LOG CASES
-  # Set plot, add axes, add background gridlines
-  plot('', xlim = range(xseq.fbc), ylim = range(yseq.log.cases), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
-  axis(1, at = xseq.fbc, labels = format(xseq.fbc, date.format), font = x.font.fbc, cex.axis = x.cex.fbc)
-  axis(2, at = yseq.log.cases, labels = as.character(10^yseq.log.cases), font = y.font.fbc, cex.axis = y.cex.fbc)
-  abline(v = xseq.fbc, h = yseq.log.cases, col = 'lightgrey', lty = 'dotted')
-  for(c2 in 2:ncol(d.10k.log)){
-    lines(d.10k.log[,c2] ~ d.10k.log$date, lwd = 1.5, col = 'grey')
-  } # Draw lines + overplot focal country line
-  lines(d.10k.log[,c] ~ d.10k.log$date, lwd = 3)
-  
-  
-  # DEATHS RAW
-  plot('', xlim = range(xseq.fbc), ylim = range(yseq.raw.deaths), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
-  axis(1, at = xseq.fbc, labels = format(xseq.fbc, date.format), font = x.font.fbc, cex.axis = x.cex.fbc)
-  axis(2, at = yseq.raw.deaths, font = y.font.fbc, cex.axis = y.cex.fbc)
-  abline(v = xseq.fbc, h = yseq.raw.deaths, col = 'lightgrey', lty = 'dotted')  
-  for(c2 in 2:ncol(d.deaths)){
-    lines(d.deaths[,c2] ~ d.deaths$date, lwd = 1.5, col = 'grey')
-  } # Draw lines + overplot focal country line
-  lines(d.deaths[,c] ~ d.deaths$date, lwd = 3)
-  
-  # DEATHS LOG
-  plot('', xlim = range(xseq.fbc), ylim = range(yseq.log.deaths), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
-  axis(1, at = xseq.fbc, labels = format(xseq.fbc, date.format), font = x.font.fbc, cex.axis = x.cex.fbc)
-  axis(2, at = yseq.log.deaths, labels = as.character(10^yseq.log.deaths), font = y.font.fbc, cex.axis = y.cex.fbc)
-  abline(v = xseq.fbc, h = yseq.log.deaths, col = 'lightgrey', lty = 'dotted')  
-  for(c2 in 2:ncol(d.deaths.10k.log)){
-    lines(d.deaths.10k.log[,c2] ~ d.deaths.10k.log$date, lwd = 1.5, col = 'grey')
-  }
-  lines(d.deaths.10k.log[,c] ~ d.deaths.10k.log$date, lwd = 3)
-  
-  
-  # ADD LABELS
-  # Y-labels
-  mtext('Cases', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.75)
-  mtext('Deaths', side = 2, line = ylab.line.fbc, outer = TRUE, col = 'black', cex = ylab.cex.fbc, font = ylab.f.fbc, at = 0.25)
-  
-  # X-labels
-  mtext('Cumulative cases per 10k pop.', side = 3, line = xTOPlab.line.fbc, outer = TRUE, col = 'black', cex = xTOPlab.cex.fbc, font = xTOPlab.f.fbc, at = 0.77)
-  mtext('Cumulative cases', side = 3, line = xTOPlab.line.fbc, outer = TRUE, col = 'black', cex = xTOPlab.cex.fbc, font = xTOPlab.f.fbc, at = 0.25)
-  mtext(paste0('Date (dd',str_sub(date.format, 3, 3),'mm)'), side = 1, line = xBOTTOMlab.line.fbc, outer = TRUE, col = 'black', cex = xBOTTOMlab.cex.fbc, font = xBOTTOMlab.f.fbc)
-  
-  # TITLE
-  mtext(paste(who.info.tab[match(countries[c], who.info.tab$country), 'full_name']), side = 3, line = 2, outer = TRUE, col = 'black', cex = 2, font = 2)
-  
-}
 
-
-# By-COUNTRY PLOTS FUNC (2) ----
-# New version, with added fan plots
 plot.country.2<- function(c){
   
-  # SET UP THE PLOT AREA
+  # SET UP THE 3 * 2 PLOT AREA
   par(mfrow = c(3,2),
       oma = c(2,2,4,1) + 0.1,
       mar = c(2,2,1,1) + 0.1)
@@ -517,11 +443,6 @@ plot.country.2<- function(c){
     lines(d.deaths.10k.log[,c2] ~ d.deaths.10k.log$date, lwd = 1.5, col = 'grey')
   }
   lines(d.deaths.10k.log[,c] ~ d.deaths.10k.log$date, lwd = 3)
-  
-  
-  
-  
-  
   
   
   # FAN PLOT CASES ----
@@ -663,9 +584,7 @@ plot.country.2<- function(c){
   
 }
 
-# DATA FOR MAPS ----
-
-
+# MAPS  ----
 
 who_dt_data<- # Assemble the doubling times formatted for maps plotting
 left_join(who.info.tab[,c('ISO3', 'country')], Td.report[,1:2], by = 'country') %>%
@@ -675,8 +594,8 @@ left_join(who.info.tab[,c('ISO3', 'country')], Td.report[,1:2], by = 'country') 
          countryterritoryCode = ISO3)#%>%
   #replace(is.na(.), 0)
 
-
-who_dt_data$Dt_cases[!is.finite(who_dt_data$Dt_cases)]<- 0
+# Set the NA and Inf Dt to zero, so that they appear in white on the maps
+who_dt_data$Dt_cases[!is.finite(who_dt_data$Dt_cases)]<- 0 
 who_dt_data$Dt_deaths[!is.finite(who_dt_data$Dt_deaths)]<- 0
 
 
@@ -685,6 +604,8 @@ who_dt_data$Dt_deaths[!is.finite(who_dt_data$Dt_deaths)]<- 0
 
 africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
 africa@data %<>% left_join(who_data, by=c("ISO_A3"="countryterritoryCode"))
+
+# Maps quick achk solution for legend: overplot a white point and then a text, to replace the "0" on the scale by a more informative legend text (0s are not real zeros here, they are NA and Inf, but the NA variable is reserved for non-WHO countries here)
 
 # Map CASES ----
 breaks <- classIntervals(africa@data$total_cases, n = 8, style = "jenks", na.rm=T)$brks
@@ -786,8 +707,8 @@ dev.off()
 
 # ASSEMBLE MAPS ----
 
-#crop images and create 2x6 plot
-#This assumes images are 1920x1240, will centre-crop to 1080x960 
+# crop images and create 3x6 plot
+# This assumes images are 1920x1240, will centre-crop to 1080x960 
 #Read images
 image1 <- image_read(paste0("./output/Map_cum_Cases_", today, "_.png"))
 image2 <- image_read(paste0("./output/Map_cases_10k_pop_", today, "_.png"))
@@ -804,25 +725,8 @@ image4_crop <- image_crop(image4, "1080x960+420+140")
 image5_crop <- image_crop(image5, "1080x960+420+140")
 image6_crop <- image_crop(image6, "1080x960+420+140")
 
-#save to 3x2 plot-
-# png(file = paste0("./output/6Maps_WHO_Africa_", today, "_.png"), width=1080*2, height=960*3, pointsize=22)
-# par(mai=rep(0,4)) # no margins
-# layout(matrix(1:6, ncol=2, byrow=TRUE))
-# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
-# rasterImage(image1_crop, 0, 0, 1,1)
-# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
-# rasterImage(image3_crop, 0, 0, 1,1)
-# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
-# rasterImage(image2_crop, 0, 0, 1,1)
-# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
-# rasterImage(image4_crop, 0, 0, 1,1)
-# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
-# rasterImage(image5_crop, 0, 0, 1,1)
-# plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i')
-# rasterImage(image6_crop, 0, 0, 1,1)
-# dev.off()
 
-
+# Save a 3*2 plots image, with added titles for each map
 png(file = paste0("./output/6Maps_WHO_Africa_", today, "_.png"), width=1080*2, height=960*3, pointsize=22)
 par(mai=rep(0.5,4)) # no margins
 layout(matrix(1:6, ncol=2, byrow=TRUE))
@@ -839,42 +743,6 @@ rasterImage(image5_crop, 0, 0, 1,1)
 plot(NA, xlim=0:1, ylim=0:1, bty="n", axes=0, xaxs = 'i', yaxs='i', main = 'DOUBLING TIME DEATHS', cex.main = 2)
 rasterImage(image6_crop, 0, 0, 1,1)
 dev.off()
-
-
-# PAIRWISE TIME AHEAD COMPARISON ----
-# d.10k<- # Cumulative cases per 10k
-#   read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'cumulative cases per 10k popula') %>%
-#     rename(`Cote d'Ivoire` = `Côte d’Ivoire`,
-# `Sao Tome and Principe` = `São Tomé and Príncipe`) %>%
-#   mutate(date = as.Date(date)) %>%
-#   as.data.frame()
-# 
-# pairs<- expand.grid(colnames(d.10k[,-1]), colnames(d.10k[,-1]))
-# pairs$Var1<- as.character(pairs$Var1)
-# pairs$Var2<- as.character(pairs$Var2)
-# pairs$time.diff<- NA
-# for(i in 1:nrow(pairs)){
-#   
-#   pairs$time.diff[i]<- epidemic.diff(d.10k, focal.country = as.character(pairs[i,1]), vs.country =  as.character(pairs[i,2]))
-#   
-# }
-# 
-# time.diff.df<-
-#   pairs[order(pairs$time.diff, na.last = TRUE, decreasing = TRUE), ] %>%
-#   rename(`focal country` = Var1,
-#          `compared to` = Var2,
-#          `Time difference (days)` = time.diff)
-# 
-# time.diff.df$`focal country`<- who.info.tab[match(time.diff.df$`focal country`, who.info.tab$country), 'name_plot']
-# time.diff.df$`compared to`<- who.info.tab[match(time.diff.df$`compared to`, who.info.tab$country), 'name_plot']
-# 
-# time.diff.df$epidemic.diff.text<- formatC(time.diff.df$`Time difference (days)`, digits = 1, format = "f")
-# time.diff.df$`focal country`<- factor(time.diff.df$`focal country`, levels = rev(unique(as.character(time.diff.df$`focal country`))))
-# time.diff.df$`compared to`<- factor(time.diff.df$`compared to`, levels = unique(as.character(time.diff.df$`compared to`)))
-# 
-# upper<- time.diff.df[-which(na.omit(time.diff.df$`Time difference (days)`) < 0),] # This is the dataframe used for the heatmap in final report
-
-
 
 
 
