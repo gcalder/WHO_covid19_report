@@ -1,20 +1,32 @@
 ---
-title: ""
-author: ""
-header-includes:
-- \usepackage{float}
-- \floatplacement{figure}{H}
-- \usepackage{pdflscape}
-- \newcommand{\blandscape}{\begin{landscape}}
-- \newcommand{\elandscape}{\end{landscape}}
-- \renewcommand{\contentsname}{Contents (click to access)}
+title: \textcolor{TIBAORANGE}{COVID-19 situation report for WHO Africa Region}
+subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date() + 1, "%d/%m/%Y")`}
+author: \textcolor{TIBARED}{Produced by the TIBA COVID-19 Pandemic Response Unit}
+header-includes:      
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \usepackage{color}
+    - \definecolor{TIBAORANGE}{RGB}{197,90,23}
+    - \definecolor{TIBARED}{RGB}{140,24,23}
+    - \fancyfoot[CO,CE]{\textcolor{TIBAORANGE}{NIHR Global Health Research Unit Tackling Infections to Benefit Africa 
+                                               at the University of Edinburgh}}
+    - \usepackage{float}
+    - \floatplacement{figure}{H}
+    - \usepackage{pdflscape}
+    - \newcommand{\blandscape}{\begin{landscape}}
+    - \newcommand{\elandscape}{\end{landscape}}
+    - \renewcommand{\contentsname}{Contents (click to access)}
+    - \newcommand{\ssubsection}[1]{\subsection[#1]{\centering\Huge {#1}}}
 output:
-  word_document: default
-  pdf_document: null
-subtitle: 10/04/2020
+  pdf_document: default
 extra_dependencies: float
 ---
 
+\addtolength{\headheight}{1cm}
+\pagestyle{fancyplain}
+\rhead{\includegraphics[width=0.2\textwidth]{../input_files/tiba_logo}}
+\lhead{}
+\renewcommand{\headrulewidth}{0pt}
 
 ```{r setup, include=FALSE}
 
@@ -26,74 +38,28 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today<- Sys.Date() - 1
+today<- Sys.Date()
 library(plyr)
-load(paste0('/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/WHO_report_analysis_', as.character(today), '.RData'))
-source('/Users/s1687811/Documents/GitHub/WHO_covid19_report/script/sourced_functions_doublingTime_reports.R')
-
-
-
-# FIGURES PARAMETERS ---
-date.format = "%d-%m" # How date will be displayed. Currently set as "%d-%m", but can be made with a different separator (e.g. "%d/%m"), or with months before days ("%m-%d"), or with years ("%d-%m-%y"), etc.
-
-# PARAMETERS FIGURE BY COUNTRY (".fbc" stands for Figure By Country)
-
-x.font.fbc = 2 # font face for x-axis ticks
-y.font.fbc = 2 # font face for y-axis ticks
-
-x.cex.fbc = 1.2 # size for x-axis ticks
-y.cex.fbc = 1.2 # size for y-axis ticks
-
-# Margins labelling parameters
-ylab.cex.fbc = 1.2  # size for y-axis label
-ylab.f.fbc = 2      # font face for y-axis label
-ylab.line.fbc = 0.7 # line for y-axis label (how far from the plot)
-
-# Same as the three above but for the horizontal labels on top par of panels ("Cases" and "Deaths")
-xTOPlab.cex.fbc  = 1.2
-xTOPlab.f.fbc    = 2
-xTOPlab.line.fbc = -0.5
-
-# Same as the three above but for the horizontal labels on bottom par of panels ("Date")
-xBOTTOMlab.cex.fbc  = 1.2
-xBOTTOMlab.f.fbc    = 2
-xBOTTOMlab.line.fbc = 1
-
-# Defining which dates will be displayed on x-axis. Set a sequence from first to last date and display 5 dates total
-xseq.fbc = seq.Date(from = min(d$date), to = max(d$date), length.out = 5) 
-
-# Y-axis scales spacing
-y.axti.fbc.rawCases  = 100 # Interval between y-axis ticks for the cumulative reported cases
-y.axti.fbc.rawDeaths = 5  # Interval between y-axis ticks for the cumulative reported deaths
-y.axti.fbc.logCases  = 1   # Interval between y-axis ticks for the cumulative reported cases per 10k populations (log10 scale)
-y.axti.fbc.logDeaths = 1  # Interval between y-axis ticks for the cumulative reported deaths per 10k populations (log10 scale) 
-
-
-# y-scale for cumulative cases
-thirdWorst<- rev(sort(tail(d, 1)[,-1]))[[3]]
-thirdWorstPadded<- round_any(thirdWorst, 100)
-yseq.raw.cases = seq(0, thirdWorstPadded, y.axti.fbc.rawCases) 
-
-# y-scale for cumulative deaths
-secondworstDeaths<- rev(sort(tail(d.deaths,1)[,-1]))[[2]]
-secondworstDeathsPadded<- secondworstDeaths+1 #round_any(worstDeaths, 10, f = ceiling)
-yseq.raw.deaths = seq(0, secondworstDeathsPadded, y.axti.fbc.rawDeaths)
-
-# y-scale for log10 cumulative cases per 10k pop
-yseq.log.cases<- seq(round_any(range(d.10k.log[,2:ncol(d.10k.log)], na.rm = TRUE)[1], 1, f = floor),
-                   round_any(range(d.10k.log[,2:ncol(d.10k.log)], na.rm = TRUE)[2], 1, f = ceiling),
-                   y.axti.fbc.logCases)
-
-
-# y-scale for log10 cumulative deaths per 10k pop
-yseq.log.deaths<- seq(round_any(range(d.deaths.10k.log[,2:ncol(d.deaths.10k.log)], na.rm = TRUE)[1], 1, f = floor),
-                     round_any(range(d.deaths.10k.log[,2:ncol(d.deaths.10k.log)], na.rm = TRUE)[2], 1, f = ceiling),
-                     y.axti.fbc.logDeaths)
-
+library(cowplot)
+load(paste0('../output/WHO_report_analysis_', as.character(today), '.RData'))
+source('../script/sourced_functions_doublingTime_reports.R')
 
 
 ```
 &nbsp;
+&nbsp;
+```{r map, fig.align = 'center', out.width= "100%"}
+knitr::include_graphics("../input_files/covid-19_africa_map.png")
+```
+
+\newpage
+
+\addtolength{\headheight}{-1.5cm}
+\pagestyle{fancyplain}
+\rhead{}
+\lhead{}
+\pagestyle{fancy}
+\fancyfoot[CO,CE]{\textcolor{TIBAORANGE}{}}
 
 \newpage
 &nbsp;
@@ -120,7 +86,7 @@ yseq.log.deaths<- seq(round_any(range(d.deaths.10k.log[,2:ncol(d.deaths.10k.log)
  
 
 ```{r mapWHO, fig.align = 'center', out.width= "100%"}
-knitr::include_graphics("/Users/s1687811/Documents/GitHub/WHO_covid19_report/input_files/WHO_Africa3.png")
+knitr::include_graphics("../input_files/WHO_Africa3.png")
 ```
 
 \newpage
@@ -134,13 +100,13 @@ The maps below summarise the in-country situations:
  
 * Top row: cumulative reported cases (left) and deaths (right).  
 * Middle row: cumulative reported cases (left) and deaths (right) per 10,000 population on a log10 scale.  
-* Bottom row: overview of doubling time of cumulative reported cases (left) and deaths (right). Doubling times are estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.
+* Bottom row: overview of doubling time of cumulative reported cases (left) and deaths (right). Doubling times are estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`. The lower the doubling time the faster the spread of COVID-19.
 
 \newpage
  
  
 ```{r mapSummaries, fig.align = 'center', out.width= "100%"}
-knitr::include_graphics(paste0("/Users/s1687811/Documents/GitHub/WHO_covid19_report/output/6Maps_WHO_Africa_", today, "_.png"))
+knitr::include_graphics(paste0("../output/6Maps_WHO_Africa_", today, "_.png"))
 ```
 
 &nbsp;
@@ -159,386 +125,140 @@ As of `r format(today, "%d/%m/%Y")`, each panel below shows for each country:
  
 * Top row: cumulative reported cases (left) and deaths (right).  
 * Middle row: cumulative reported cases (left) and deaths (right) per 10,000 population on a log10 scale.   
-* Bottom row: relative increase in number of cases (left) and deaths (right) based on the doubling times (of cases and deaths respectively) estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  
+* Bottom row: relative increase in cumulative number of cases (left) and deaths (right) based on the doubling times (of cases and deaths respectively) estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  
 
 
-\newpage
 
-## Algeria
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 02)
+```{r plot_country_data,  fig.height = 10.5, fig.width = 9, fig.align = "center",results = "asis"}
+country_list <- WHO_cases_and_deaths %>% distinct(country) %>% pull(country)
+for( i in country_list){
+  current_country_data <- WHO_cases_and_deaths%>% 
+    mutate(current_country = (country == i))
+  
+ current_country_increase <-  WHO_cases_and_deaths_7_day_increase %>%
+   mutate(current_country = (country == i))
+  
+  # scale graphs according to current country
+  current_country_max_cases <- current_country_data %>% 
+    filter(current_country) %>%
+    pull(cum_cases) %>%
+    max()
+  
+  current_country_max_cases_per_10k <- current_country_data %>% 
+    filter(current_country) %>%
+    pull(cum_cases_per_10k) %>%
+    max()
+  
+  current_country_max_deaths <- current_country_data %>% 
+    filter(current_country) %>%
+    pull(cum_deaths) %>%
+    max()
+  
+  current_country_max_deaths_per_10k <- current_country_data %>% 
+    filter(current_country) %>%
+    pull(cum_deaths_per_10k) %>%
+    max()
+  
+  # plot cases
+  cases_plot <- ggplot() +
+    geom_line(data=current_country_data %>% filter(!current_country),
+              aes(x=date,y=cum_cases,group=country),
+             colour = "lightgray") +
+    geom_line(data=current_country_data %>% filter(current_country),
+              aes(x=date,y=cum_cases),
+              colour="black") +
+    theme_classic(base_size = 15) + 
+    theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
+          axis.title.x = element_blank(),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title="Cases",y="Cumulative") +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today)) +
+    coord_cartesian(ylim = c(0,ifelse(current_country_max_cases > 40, current_country_max_cases,40)))
+  
+  # plot deaths
+  deaths_plot <- ggplot() +
+    geom_line(data=current_country_data %>% filter(!current_country),
+              aes(x=date,y=cum_deaths,group=country),
+             colour = "lightgray") +
+    geom_line(data=current_country_data %>% filter(current_country),
+              aes(x=date,y=cum_deaths),
+              colour="black") +
+    theme_classic(base_size = 15) +
+    theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "Deaths") +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today)) +
+    coord_cartesian(ylim = c(0,ifelse(current_country_max_deaths > 4, current_country_max_deaths,4)))
+  
+  # plot cases per 10k
+  cases_per_10k_plot <- ggplot() +
+    geom_line(data=current_country_data %>% filter(!current_country,cum_cases_per_10k>0),
+              aes(x=date,y=cum_cases_per_10k,group=country),
+             colour = "lightgray") +
+    geom_line(data=current_country_data %>% filter(current_country,cum_cases_per_10k>0),
+              aes(x=date,y=cum_cases_per_10k),
+              colour="black") +
+    theme_classic(base_size = 15) + 
+    theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
+          axis.title.x = element_blank()) +
+    labs(x="Date",y="Cumulative per 10k population") +
+    scale_y_log10() +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today)) +
+    coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_cases_per_10k > 0.01, current_country_max_cases_per_10k,0.1)))
+  
+  # plot deaths per 10k
+  deaths_per_10k_plot <- ggplot() +
+    geom_line(data=current_country_data %>% filter(!current_country,cum_deaths_per_10k>0),
+             aes(x=date,y=cum_deaths_per_10k,group=country),
+             colour = "lightgray") +
+    geom_line(data=current_country_data %>% filter(current_country,cum_deaths_per_10k>0),
+              aes(x=date,y=cum_deaths_per_10k),
+              colour="black") +
+    scale_y_log10() +
+    theme_classic(base_size = 15) +
+    theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank())  +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today))  +
+    coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_deaths_per_10k > 0.01, current_country_max_deaths_per_10k,0.01)))
+ 
+  # plot 7 day case increase
+  seven_day_cum_cases <- ggplot() +
+    geom_line(data = current_country_increase %>% filter(!current_country), aes(x=date,y=cum_case_relative_increase,group = country),colour = "lightgray") +
+    geom_line(data = current_country_increase %>% filter(current_country), aes(x=date,y=cum_case_relative_increase),colour="black") +
+    labs(x="Date", y = " Relative increase") +
+    theme_classic(base_size = 15) 
+  
+   # plot 7 day deaths increase
+  seven_day_cum_deaths <- ggplot() +
+    geom_line(data = current_country_increase %>% filter(!current_country), aes(x=date,y=cum_deaths_relative_increase,group = country),colour="lightgray") +
+    geom_line(data = current_country_increase %>% filter(current_country), aes(x=date,y=cum_deaths_relative_increase),colour="black") +
+    labs(x="Date") +
+    theme_classic(base_size = 15) +
+    theme(axis.title.y = element_blank())
+    
+  
+  # combine plots
+  multi_plot <- plot_grid(cases_plot,
+          deaths_plot,
+          cases_per_10k_plot,
+          deaths_per_10k_plot,
+          seven_day_cum_cases,
+          seven_day_cum_deaths,
+          cols = 2,
+          align = "hv")
+  cat("\\begin{figure}[p]")
+  cat(paste0("\\ssubsection{",i,"}"))
+  print(multi_plot)
+  cat("\\end{figure}")
+}
+
 ```
 
-\newpage
+&nbsp;
 
-## Angola
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 03)
-```
-
-\newpage
-
-
-## Benin
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 04)
-```
-
-\newpage
-
-## Botswana
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 05)
-```
-
-\newpage
-
-## Burkina Faso
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 06)
-```
-
-\newpage
-
-## Burundi
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 07)
-```
-
-\newpage
-
-## Cabo Verde
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 08)
-```
-
-\newpage
-
-## Cameroon
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 09)
-```
-
-\newpage
-
-## Central African Republic
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 10)
-```
-
-\newpage
-
-## Chad
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 11)
-```
-
-\newpage
-
-## Comoros
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 12)
-```
-
-\newpage
-
-## Congo
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 13)
-```
-
-\newpage
-
-## Cote d'Ivoire
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 14)
-```
-
-\newpage
-
-## Democratic Republic of the Congo
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 15)
-```
-
-\newpage
-
-## Equatorial Guinea
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 16)
-```
-
-\newpage
-
-## Eritrea
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 17)
-```
-
-\newpage
-
-## Eswatini
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 18)
-```
-
-\newpage
-
-## Ethiopia
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 19)
-```
-
-\newpage
-
-## Gabon
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 20)
-```
-
-\newpage
-
-## Gambia
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 21)
-```
-
-\newpage
-
-## Ghana
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 22)
-```
-
-\newpage
-
-## Guinea
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 23)
-```
-
-\newpage
-
-## Guinea Bissau
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 24)
-```
-
-\newpage
-
-## Kenya
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 25)
-```
-
-\newpage
-
-## Lesotho
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 26)
-```
-
-\newpage
-
-## Liberia
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 27)
-```
-
-\newpage
-
-## Madagascar
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 28)
-```
-
-\newpage
-
-## Malawi
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 29)
-```
-
-\newpage
-
-## Mali
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 30)
-```
-
-\newpage
-
-## Mauritania
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 31)
-```
-
-\newpage
-
-## Mauritius
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 32)
-```
-
-\newpage
-
-## Mozambique
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 33)
-```
-
-\newpage
-
-## Namibia
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 34)
-```
-
-\newpage
-
-## Niger
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 35)
-```
-
-\newpage
-
-## Nigeria
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 36)
-```
-
-\newpage
-
-## Rwanda
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 37)
-```
-
-\newpage
-
-## Sao Tome and Principe
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 38)
-```
-
-\newpage
-
-
-## Senegal
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 39)
-```
-
-\newpage
-
-## Seychelles
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 40)
-```
-
-\newpage
-
-## Sierra Leone
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 41)
-```
-
-\newpage
-
-## South Africa
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 42)
-```
-
-\newpage
-
-## South Sudan
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 43)
-```
-
-\newpage
-
-## Togo
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 44)
-```
-
-\newpage
-
-## Uganda
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 45)
-```
-
-\newpage
-
-## United Republic of Tanzania
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 46)
-```
-
-\newpage
-
-## Zambia
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 47)
-```
-
-\newpage
-
-## Zimbabwe
-```{r, echo=FALSE,  fig.height = 10.5, fig.width = 7, fig.fullwidth = TRUE}
-countries<- colnames(d)
-plot.country.2(c = 48)
-```
 
 \newpage
 
@@ -551,7 +271,7 @@ plot.country.2(c = 48)
 
 
 
-###Doubling time calculations
+### Doubling time calculations
 
 Calculated over prior 7 days using method described by *E. Vynnycky & R. White (2010) An Introduction to Infectious Disease Modelling*, page 74.  
   
@@ -566,9 +286,8 @@ Confidence intervals calculated using bootstrapping of a simulated dataset with 
 \newpage
 
 
-## Extended data tables
+\section{Extended Data tables}
 
-\newpage
 
 ### Cumulative reported cases
 &nbsp;
@@ -576,9 +295,12 @@ Confidence intervals calculated using bootstrapping of a simulated dataset with 
 # Table produced in the analysis script, as it requires the 95%CI, extracted from the simulations
 
 dat.cumsumraw.df <- 
-  dat.cumsumraw.df %>%
-  rename(`95%CI lower` = ci.low,
-         `95%CI upper` = ci.upp)
+  WHO_latest_day_cases_and_deaths_simulated %>%
+  transmute(Country = country,
+            `Cum. reported cases` = last_day_case_obs,
+            `95%CI lower` = last_day_case_ci_low,
+            `95%CI upper` = last_day_case_ci_high) %>%
+  arrange(desc(`Cum. reported cases`))
 
 kable(dat.cumsumraw.df)
 ```
@@ -593,9 +315,12 @@ kable(dat.cumsumraw.df)
 # Table produced in the analysis script, as it requires the 95%CI, extracted from the simulations
 
 dat.cumsum10k.df <- 
-  dat.cumsum10k.df %>%
-  rename(`95%CI lower` = ci.low,
-         `95%CI upper` = ci.upp)
+  WHO_latest_day_cases_and_deaths_simulated %>%
+  transmute(Country = country,
+            `Cum. reported cases per 10k pop` = last_day_case_obs_per_10k,
+            `95%CI lower` = last_day_case_ci_low_per_10k,
+            `95%CI upper` = last_day_case_ci_high_per_10k) %>%
+  arrange(desc(`Cum. reported cases per 10k pop`))
 
 kable(dat.cumsum10k.df)
 ```
@@ -609,10 +334,12 @@ kable(dat.cumsum10k.df)
 # This does not report CI so directly get it from the data tables
 
 tab.total.deaths<-
-  gather(tail(d.deaths, 1), 'Country', 'Cum. Num. Deaths', 2:ncol(d.deaths)) %>%
-  select(-date) %>%
-  arrange(-`Cum. Num. Deaths`) %>%
-  rename(`Cum. reported deaths` = `Cum. Num. Deaths`)
+  WHO_latest_day_cases_and_deaths_simulated %>%
+  transmute(Country = country,
+            `Cum. reported deaths` = last_day_deaths_obs,
+            `95%CI lower` = last_day_deaths_ci_low,
+            `95%CI upper` = last_day_deaths_ci_high) %>%
+  arrange(desc(`Cum. reported deaths`))
 
 kable(tab.total.deaths)
 ```
@@ -625,8 +352,12 @@ kable(tab.total.deaths)
 ```{r TabDeaths10k, results = 'asis', echo = FALSE}
 # This does not report CI so directly get it from the data tables
 
-tab.total.deaths.10k<- gather(tail(d.deaths.10k, 1), 'Country', 'Cum. Num. Deaths per 10k pop.', 2:ncol(d.deaths.10k)) %>% select(-date) %>% arrange(-`Cum. Num. Deaths per 10k pop.`) %>% mutate(`Cum. Num. Deaths per 10k pop.` = round(`Cum. Num. Deaths per 10k pop.`, 4)) %>%
-  rename(`Cum. reported deaths per 10k pop.` = `Cum. Num. Deaths per 10k pop.`)
+tab.total.deaths.10k<- WHO_latest_day_cases_and_deaths_simulated %>%
+  transmute(Country = country,
+            `Cum. reported deaths per 10k pop` = last_day_deaths_obs_per_10k,
+            `95%CI lower` = last_day_deaths_ci_low_per_10k,
+            `95%CI upper` = last_day_deaths_ci_high_per_10k) %>%
+  arrange(desc(`Cum. reported deaths per 10k pop`))
 
 kable(tab.total.deaths.10k)
 
@@ -640,15 +371,17 @@ kable(tab.total.deaths.10k)
 
 ```{r DtTabIncidence, results = 'asis', echo = FALSE}
 Td.report.appendix<- 
-Td.report[order(Td.report$Td.obs, na.last = TRUE),] %>%
-  rename(Country = country,
-         `Doubling time (days)` = Td.obs,
-         `95%CI lower` = ci.low,
-         `95%CI upper` = ci.upp) %>%
-  select(-t1, -t2) %>%
-  as.data.frame()
+WHO_cases_and_deaths_doubling_time %>%
+  ungroup() %>%
+  transmute(Country = country,
+         `Doubling time (days)` = cases_doubling_time,
+         `95%CI lower` = cases_ci_low,
+         `95%CI upper` = cases_ci_upp) %>%
+  arrange(desc(`Doubling time (days)`))
 
-kable(Td.report.appendix, row.names = FALSE)
+Td.report.appendix$`Doubling time (days)`[is.infinite(Td.report.appendix$`Doubling time (days)`)] <- NA
+
+kable(Td.report.appendix %>% arrange(`Doubling time (days)`), row.names = FALSE)
 ```
 
 \newpage
@@ -657,15 +390,17 @@ kable(Td.report.appendix, row.names = FALSE)
 ```{r DtTabDeaths, results = 'asis', echo = FALSE}
 
 Td.report.appendix.deaths<- 
-Td.report.deaths[order(Td.report.deaths$Td.obs, na.last = TRUE),] %>%
-  rename(Country = country,
-         `Doubling time (days)` = Td.obs,
-         `95%CI lower` = ci.low,
-         `95%CI upper` = ci.upp) %>%
-  select(-t1, -t2) %>%
-  as.data.frame()
+WHO_cases_and_deaths_doubling_time %>%
+  ungroup() %>%
+  transmute(Country = country,
+         `Doubling time (days)` = deaths_doubling_time,
+         `95%CI lower` = deaths_ci_low,
+         `95%CI upper` = deaths_ci_upp) %>%
+  arrange(desc(`Doubling time (days)`))
 
-kable(Td.report.appendix.deaths, row.names = FALSE)
+Td.report.appendix.deaths$`Doubling time (days)`[is.infinite(Td.report.appendix.deaths$`Doubling time (days)`)] <- NA
+
+kable(Td.report.appendix.deaths %>% arrange(`Doubling time (days)`), row.names = FALSE)
 
 ```
 
