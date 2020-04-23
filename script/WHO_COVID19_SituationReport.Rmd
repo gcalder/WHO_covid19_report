@@ -1,6 +1,6 @@
 ---
 title: \textcolor{TIBAORANGE}{COVID-19 situation report for WHO Africa Region}
-subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date() + 1, "%d/%m/%Y")`}
+subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date(), "%d/%m/%Y")`}
 author: \textcolor{TIBARED}{Produced by the TIBA COVID-19 Pandemic Response Unit}
 header-includes:      
     - \usepackage{fancyhdr}
@@ -38,7 +38,7 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today<- Sys.Date()
+today<- Sys.Date() - 7
 library(plyr)
 library(cowplot)
 load(paste0('../output/WHO_report_analysis_', as.character(today), '.RData'))
@@ -71,7 +71,7 @@ knitr::include_graphics("../input_files/covid-19_africa_map.png")
 \newpage
 
 
-# Section 1: Overview of WHO Africa Region
+# Section 1: Overview of WHO Africa Region `r format(today, "%d/%m/%Y")`
 &nbsp;
  
 &nbsp;
@@ -125,7 +125,7 @@ As of `r format(today, "%d/%m/%Y")`, each panel below shows for each country:
  
 * Top row: cumulative reported cases (left) and deaths (right).  
 * Middle row: cumulative reported cases (left) and deaths (right) per 10,000 population on a log10 scale.   
-* Bottom row: relative increase in cumulative number of cases (left) and deaths (right) based on the doubling times (of cases and deaths respectively) estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  
+* Bottom row: relative increase in cumulative number of cases (left) and deaths (right) based on the doubling times (of cases and deaths respectively) estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  The lower the doubling time the faster the spread of COVID-19.
 
 
 
@@ -204,7 +204,7 @@ for( i in country_list){
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank()) +
     labs(x="Date",y="Cumulative per 10k population") +
-    scale_y_log10() +
+    scale_y_log10(breaks = c(0.1,0.01,0.001,0.0001),labels = c("0.1","0.01","0.001","1e-4")) +
     scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today)) +
     coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_cases_per_10k > 0.01, current_country_max_cases_per_10k,0.1)))
   
@@ -216,7 +216,7 @@ for( i in country_list){
     geom_line(data=current_country_data %>% filter(current_country,cum_deaths_per_10k>0),
               aes(x=date,y=cum_deaths_per_10k),
               colour="black") +
-    scale_y_log10() +
+    scale_y_log10(breaks = c(0.1,0.01,0.001,0.0001),labels = c("0.1","0.01","0.001","1e-4")) +
     theme_classic(base_size = 15) +
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),

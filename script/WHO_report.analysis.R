@@ -5,7 +5,7 @@
 
 # 1) SET UP ----
 
-today<- Sys.Date() # Set date as to that of the data to fetch.
+today<- Sys.Date() - 1 # Set date as to that of the data to fetch.
 iter = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -68,29 +68,6 @@ WHO_cases_and_deaths<- # Get cumulative case counts data
                select(country,popsize)) %>% 
   mutate(popsize = popsize / 10000,cum_cases_per_10k=cum_cases / popsize,cum_deaths_per_10k=cum_deaths / popsize,cases_per_10k=cases / popsize,deaths_per_10k=deaths / popsize)
 
-# calculate seven day cumulative increase
-WHO_cases_and_deaths_7_day_increase <- WHO_cases_and_deaths %>%
-  select(country,date,cum_cases) %>%
-  filter(date == today | date == (today - 7)) %>%
-  spread(key= date,value = cum_cases) %>%
-  transmute(country, `2020-01-07` = .[[3]] / .[[2]],`2020-01-01`=1) %>%
-  gather(key=date,value=cum_case_relative_increase,-country)%>%
-  inner_join( 
-    WHO_cases_and_deaths %>%
-      select(country,date,cum_deaths) %>%
-      filter(date == today | date == (today - 7)) %>%
-      spread(key= date,value = cum_deaths) %>%
-      transmute(country, `2020-01-07` = .[[3]] / .[[2]],`2020-01-01`=1) %>%
-      gather(key=date,value=cum_deaths_relative_increase,-country)
-    ) %>%
-  mutate(date = ymd(date))
-
-WHO_cases_and_deaths_7_day_increase$cum_case_relative_increase[!is.finite(WHO_cases_and_deaths_7_day_increase$cum_case_relative_increase)] <- 1
-WHO_cases_and_deaths_7_day_increase$cum_deaths_relative_increase[!is.finite(WHO_cases_and_deaths_7_day_increase$cum_deaths_relative_increase)] <- 1
-WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$date == "2020-01-07"] <- today
-WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$date == "2020-01-01"] <- (today-7)
-
-
 # check data is complete
 if(!(WHO_cases_and_deaths %>% 
   group_by(country) %>% 
@@ -115,7 +92,6 @@ text(-34, -43,"Total Reported Cases", adj = 0,col="#08519C",font=2,cex=6)
 text(-18, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_cases) %>% sum()), adj = 0,col="#08519C",font=2,cex=6)
 text(24, -43,"Total Reported Deaths", adj = 0,col="#CB181D",font=2,cex=6)
 text(44, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_deaths) %>% sum()), adj = 0,col="#CB181D",font=2,cex=6)
-text(15, -49, paste0(day(today)," ",month(today,label=TRUE)), adj = 0,cex=3,font=2)
  dev.off()
 
 
@@ -196,7 +172,34 @@ WHO_cases_and_deaths_doubling_time <- WHO_cases_and_deaths_simulated_doubling_ti
       summarise(deaths_doubling_time = compute.td(cum_deaths_per_10k))
   )
 
-  
+# calculate seven day cumulative increase
+WHO_cases_and_deaths_7_day_increase <- WHO_cases_and_deaths %>%
+  select(country,date,cum_cases) %>%
+  filter(date == today | date == (today - 7)) %>%
+  inner_join(WHO_cases_and_deaths_doubling_time %>%
+               ungroup() %>%
+               transmute(country,`doubling time`=cases_doubling_time))%>%
+  spread(key= date,value = cum_cases) %>%
+  transmute(country, `2020-01-07` = .[[4]] / exp(log(.[[3]])+(7*log(2)/`doubling time`)),`2020-01-01`=1) %>%
+  gather(key=date,value=cum_case_relative_increase,-country)%>%
+  inner_join( 
+    WHO_cases_and_deaths %>%
+      select(country,date,cum_deaths) %>%
+      filter(date == today | date == (today - 7)) %>%
+      inner_join(WHO_cases_and_deaths_doubling_time %>%
+                   ungroup() %>%
+                   transmute(country,`doubling time`=deaths_doubling_time)) %>%
+      spread(key= date,value = cum_deaths) %>%
+      transmute(country, `2020-01-07` = .[[4]] / exp(log(.[[3]])+(7*log(2)/`doubling time`)),`2020-01-01`=1) %>%
+      gather(key=date,value=cum_deaths_relative_increase,-country)
+  ) %>%
+  mutate(date = ymd(date))
+
+WHO_cases_and_deaths_7_day_increase$cum_case_relative_increase[!is.finite(WHO_cases_and_deaths_7_day_increase$cum_case_relative_increase)] <- 1
+WHO_cases_and_deaths_7_day_increase$cum_deaths_relative_increase[!is.finite(WHO_cases_and_deaths_7_day_increase$cum_deaths_relative_increase)] <- 1
+WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$date == "2020-01-07"] <- today
+WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$date == "2020-01-01"] <- (today-7)
+
 
 # The TWO NEXT SECTIONS are to collect the Last day incidence of the observed data but ALSO OF THE SIMULATED DATA
 # that, to be able to report a 95%CI on the observed data
