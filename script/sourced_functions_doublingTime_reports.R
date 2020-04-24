@@ -125,7 +125,7 @@ compute.td.m1.v2<- function(dat, user.t1, user.t2){
 
 compute.td<- function(seven_day_separation){
   Td<- round(7/(log2(seven_day_separation[2]/seven_day_separation[1])), 1)
-  ifelse(seven_day_separation[2]==0&seven_day_separation[1]==0, NA, Td)
+  ifelse(seven_day_separation[2]==0|seven_day_separation[1]==0, NA, Td)
 }
 
 

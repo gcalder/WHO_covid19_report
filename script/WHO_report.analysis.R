@@ -5,7 +5,7 @@
 
 # 1) SET UP ----
 
-today<- Sys.Date() - 1 # Set date as to that of the data to fetch.
+today<- Sys.Date() # Set date as to that of the data to fetch.
 iter = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -174,30 +174,30 @@ WHO_cases_and_deaths_doubling_time <- WHO_cases_and_deaths_simulated_doubling_ti
 
 # calculate seven day cumulative increase
 WHO_cases_and_deaths_7_day_increase <- WHO_cases_and_deaths %>%
-  select(country,date,cum_cases) %>%
+  select(country,date) %>%
   filter(date == today | date == (today - 7)) %>%
   inner_join(WHO_cases_and_deaths_doubling_time %>%
                ungroup() %>%
                transmute(country,`doubling time`=cases_doubling_time))%>%
-  spread(key= date,value = cum_cases) %>%
-  transmute(country, `2020-01-07` = .[[4]] / exp(log(.[[3]])+(7*log(2)/`doubling time`)),`2020-01-01`=1) %>%
-  gather(key=date,value=cum_case_relative_increase,-country)%>%
+  spread(key= date,value = `doubling time`) %>%
+  transmute(country, `2020-01-08` = 2^(7 / .[[3]]),`2020-01-01`=1) %>%
+  gather(key=date,value=cum_cases_relative_increase,-country)%>%
   inner_join( 
     WHO_cases_and_deaths %>%
-      select(country,date,cum_deaths) %>%
+      select(country,date) %>%
       filter(date == today | date == (today - 7)) %>%
       inner_join(WHO_cases_and_deaths_doubling_time %>%
                    ungroup() %>%
-                   transmute(country,`doubling time`=deaths_doubling_time)) %>%
-      spread(key= date,value = cum_deaths) %>%
-      transmute(country, `2020-01-07` = .[[4]] / exp(log(.[[3]])+(7*log(2)/`doubling time`)),`2020-01-01`=1) %>%
-      gather(key=date,value=cum_deaths_relative_increase,-country)
+                   transmute(country,`doubling time`=deaths_doubling_time))%>%
+      spread(key= date,value = `doubling time`) %>%
+      transmute(country, `2020-01-08` = 2^(7 / .[[3]]),`2020-01-01`=1) %>%
+      gather(key=date,value=cum_deaths_relative_increase,-country) 
   ) %>%
   mutate(date = ymd(date))
 
-WHO_cases_and_deaths_7_day_increase$cum_case_relative_increase[!is.finite(WHO_cases_and_deaths_7_day_increase$cum_case_relative_increase)] <- 1
+WHO_cases_and_deaths_7_day_increase$cum_cases_relative_increase[!is.finite(WHO_cases_and_deaths_7_day_increase$cum_cases_relative_increase)] <- 1
 WHO_cases_and_deaths_7_day_increase$cum_deaths_relative_increase[!is.finite(WHO_cases_and_deaths_7_day_increase$cum_deaths_relative_increase)] <- 1
-WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$date == "2020-01-07"] <- today
+WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$date == "2020-01-08"] <- today
 WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$date == "2020-01-01"] <- (today-7)
 
 

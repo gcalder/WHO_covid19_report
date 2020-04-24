@@ -4,6 +4,7 @@ subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date(), "%d/%m/%Y")`}
 author: \textcolor{TIBARED}{Produced by the TIBA COVID-19 Pandemic Response Unit}
 header-includes:      
     - \usepackage{fancyhdr}
+    - \usepackage{geometry}
     - \pagestyle{fancy}
     - \usepackage{color}
     - \definecolor{TIBAORANGE}{RGB}{197,90,23}
@@ -15,8 +16,8 @@ header-includes:
     - \usepackage{pdflscape}
     - \newcommand{\blandscape}{\begin{landscape}}
     - \newcommand{\elandscape}{\end{landscape}}
-    - \renewcommand{\contentsname}{Contents (click to access)}
     - \newcommand{\ssubsection}[1]{\subsection[#1]{\centering\Huge {#1}}}
+
 output:
   pdf_document: default
 extra_dependencies: float
@@ -38,7 +39,7 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today<- Sys.Date() - 7
+today<- Sys.Date() - 1
 library(plyr)
 library(cowplot)
 load(paste0('../output/WHO_report_analysis_', as.character(today), '.RData'))
@@ -65,8 +66,11 @@ knitr::include_graphics("../input_files/covid-19_africa_map.png")
 &nbsp;
  
 &nbsp;
+
+\fancyfoot[c]{\thepage}
  
 \tableofcontents
+\addtocontents{toc}{\smallskip (Click to access)\par}
 
 \newpage
 
@@ -101,6 +105,8 @@ The maps below summarise the in-country situations:
 * Top row: cumulative reported cases (left) and deaths (right).  
 * Middle row: cumulative reported cases (left) and deaths (right) per 10,000 population on a log10 scale.  
 * Bottom row: overview of doubling time of cumulative reported cases (left) and deaths (right). Doubling times are estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`. The lower the doubling time the faster the spread of COVID-19.
+
+Caveat: Colour scales are non-linear and are re-calibrated every week.
 
 \newpage
  
@@ -165,8 +171,8 @@ for( i in country_list){
               aes(x=date,y=cum_cases,group=country),
              colour = "lightgray") +
     geom_line(data=current_country_data %>% filter(current_country),
-              aes(x=date,y=cum_cases),
-              colour="black") +
+              aes(x=date,y=cum_cases,group=NULL),
+              colour="black",size = 0.8) +
     theme_classic(base_size = 15) + 
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
@@ -181,8 +187,8 @@ for( i in country_list){
               aes(x=date,y=cum_deaths,group=country),
              colour = "lightgray") +
     geom_line(data=current_country_data %>% filter(current_country),
-              aes(x=date,y=cum_deaths),
-              colour="black") +
+              aes(x=date,y=cum_deaths,group=NULL),
+              colour="black",size = 0.8) +
     theme_classic(base_size = 15) +
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
@@ -190,7 +196,7 @@ for( i in country_list){
           plot.title = element_text(hjust = 0.5)) +
     labs(title = "Deaths") +
     scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today)) +
-    coord_cartesian(ylim = c(0,ifelse(current_country_max_deaths > 4, current_country_max_deaths,4)))
+    coord_cartesian(ylim = c(0,ifelse(current_country_max_deaths > 20, current_country_max_deaths,20)))
   
   # plot cases per 10k
   cases_per_10k_plot <- ggplot() +
@@ -198,8 +204,8 @@ for( i in country_list){
               aes(x=date,y=cum_cases_per_10k,group=country),
              colour = "lightgray") +
     geom_line(data=current_country_data %>% filter(current_country,cum_cases_per_10k>0),
-              aes(x=date,y=cum_cases_per_10k),
-              colour="black") +
+              aes(x=date,y=cum_cases_per_10k,group=NULL),
+              colour="black",size = 0.8) +
     theme_classic(base_size = 15) + 
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank()) +
@@ -214,30 +220,32 @@ for( i in country_list){
              aes(x=date,y=cum_deaths_per_10k,group=country),
              colour = "lightgray") +
     geom_line(data=current_country_data %>% filter(current_country,cum_deaths_per_10k>0),
-              aes(x=date,y=cum_deaths_per_10k),
-              colour="black") +
+              aes(x=date,y=cum_deaths_per_10k,group=NULL),
+              colour="black",size = 0.8) +
     scale_y_log10(breaks = c(0.1,0.01,0.001,0.0001),labels = c("0.1","0.01","0.001","1e-4")) +
     theme_classic(base_size = 15) +
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
           axis.title.y = element_blank())  +
-    scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today))  +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-56,today-42,today-28,today-14,today),limits = c(current_country_data %>% distinct(date) %>% pull(date) %>% min(),today))  +
     coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_deaths_per_10k > 0.01, current_country_max_deaths_per_10k,0.01)))
  
   # plot 7 day case increase
   seven_day_cum_cases <- ggplot() +
-    geom_line(data = current_country_increase %>% filter(!current_country), aes(x=date,y=cum_case_relative_increase,group = country),colour = "lightgray") +
-    geom_line(data = current_country_increase %>% filter(current_country), aes(x=date,y=cum_case_relative_increase),colour="black") +
+    geom_line(data = current_country_increase %>% filter(!current_country), aes(x=date,y=cum_cases_relative_increase,group = country),colour = "lightgray") +
+    geom_line(data = current_country_increase %>% filter(current_country), aes(x=date,y=cum_cases_relative_increase,group=NULL),colour="black",size = 0.8) +
     labs(x="Date", y = " Relative increase") +
-    theme_classic(base_size = 15) 
+    theme_classic(base_size = 15) +
+    scale_x_date(date_labels = "%b %d",breaks = c(today - 7, today))
   
    # plot 7 day deaths increase
   seven_day_cum_deaths <- ggplot() +
     geom_line(data = current_country_increase %>% filter(!current_country), aes(x=date,y=cum_deaths_relative_increase,group = country),colour="lightgray") +
-    geom_line(data = current_country_increase %>% filter(current_country), aes(x=date,y=cum_deaths_relative_increase),colour="black") +
+    geom_line(data = current_country_increase %>% filter(current_country), aes(x=date,y=cum_deaths_relative_increase,group=NULL),colour="black",size = 0.8) +
     labs(x="Date") +
     theme_classic(base_size = 15) +
-    theme(axis.title.y = element_blank())
+    theme(axis.title.y = element_blank()) +
+    scale_x_date(date_labels = "%b %d",breaks = c(today - 7, today))
     
   
   # combine plots
