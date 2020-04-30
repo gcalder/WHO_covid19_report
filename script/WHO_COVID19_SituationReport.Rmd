@@ -15,7 +15,7 @@ header-includes:
     - \floatplacement{figure}{H}
     - \usepackage{pdflscape}
     - \newcommand{\blandscape}{\begin{landscape}}
-    - \newcommand{\elandscape}{\end{landscape}}
+    - \newcommand{\elandscape}{\end{landscape}}   
     - \newcommand{\ssubsection}[1]{\subsection[#1]{\centering\Huge {#1}}}
 
 output:
