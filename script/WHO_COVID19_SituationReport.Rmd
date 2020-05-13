@@ -1,6 +1,6 @@
 ---
 title: \textcolor{TIBAORANGE}{COVID-19 situation report for WHO Africa Region}
-subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date(), "%d/%m/%Y")`}
+subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date() , "%d/%m/%Y")`}
 author: \textcolor{TIBARED}{Produced by the TIBA COVID-19 Pandemic Response Unit}
 header-includes:      
     - \usepackage{fancyhdr}
@@ -42,6 +42,7 @@ knitr::opts_chunk$set(message=FALSE)
 today<- Sys.Date() - 1
 library(plyr)
 library(cowplot)
+library(RColorBrewer)
 load(paste0('../output/WHO_report_analysis_', as.character(today), '.RData'))
 source('../script/sourced_functions_doublingTime_reports.R')
 
@@ -76,7 +77,7 @@ knitr::include_graphics("../input_files/covid-19_africa_map.png")
 
 
 # Section 1: Overview of WHO Africa Region `r format(today, "%d/%m/%Y")`
-&nbsp;
+## Overview
  
 &nbsp;
  
@@ -95,6 +96,8 @@ knitr::include_graphics("../input_files/WHO_Africa3.png")
 
 \newpage
 
+## Methods
+
 We compare the size and rate of increase of the COVID-19 epidemic across the countries included in WHO Africa Region.  
 &nbsp;
  
@@ -109,14 +112,46 @@ The maps below summarise the in-country situations:
 Caveat: Colour scales are non-linear and are re-calibrated every week.
 
 \newpage
- 
+## Summary maps
  
 ```{r mapSummaries, fig.align = 'center', out.width= "100%"}
 knitr::include_graphics(paste0("../output/6Maps_WHO_Africa_", today, "_.png"))
 ```
 
+
+\newpage
+
+## Sequencing
+
+As of `r format(today, "%d/%m/%Y")`, `r length(AF$Collection.date)` SARS-CoV-2 genomes collected and sequenced in Africa have been submitted to GISAID. Each genome's country of origin and collection date is summarised below:
+
+* Top graph: SARS-CoV-2 genomes available on GISAID by collection date. Six genomes from the Democratic Republic of the Congo with unknown collection dates are removed.
+
+* Bottom map: SARS-CoV-2 genomes available on GISAID by country.
+
 &nbsp;
 
+
+```{r sequencingUpdate, fig.align = 'center', out.width= "70%"}
+# Country and sample collection date of SARS-CoV-2 genomes on GISAID
+  
+
+ ggplot(AF, aes(betterDates, fill=str_wrap(country,20))) +
+   theme_bw(base_size = 12) +
+   scale_x_date(date_labels = "%d/%m") +
+   geom_bar(width=1,colour="black") +
+   ylab('SARS-CoV-2 genomes on GISAID') +
+   xlab('Sample collection date') +
+   scale_y_continuous(breaks=seq(0, 8, by = 2)) + 
+   scale_fill_brewer(palette = "BrBG") + 
+   labs(fill = 'Country') +
+   theme(panel.grid.minor.x = element_blank(),
+         panel.grid.major.x = element_blank(),
+         legend.position = "bottom",
+         legend.key.size = unit(0.7, "cm"))
+ 
+ knitr::include_graphics("../output/WHO_Africa_seq_map.png")
+```
 
 \newpage
 
@@ -131,7 +166,7 @@ As of `r format(today, "%d/%m/%Y")`, each panel below shows for each country:
  
 * Top row: cumulative reported cases (left) and deaths (right).  
 * Middle row: cumulative reported cases (left) and deaths (right) per 10,000 population on a log10 scale.   
-* Bottom row: relative increase in cumulative number of cases (left) and deaths (right) based on the doubling times (of cases and deaths respectively) estimated over a 7 day period up to `r format(today, "%d/%m/%Y")`.  The lower the doubling time the faster the spread of COVID-19.
+* Bottom row: relative increase in cumulative number of cases (left) and deaths (right) over the 7 day period leading up to `r format(today, "%d/%m/%Y")`.
 
 
 

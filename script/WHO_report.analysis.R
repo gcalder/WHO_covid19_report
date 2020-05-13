@@ -5,7 +5,7 @@
 
 # 1) SET UP ----
 
-today<- Sys.Date() # Set date as to that of the data to fetch.
+today<- Sys.Date() - 4 # Set date as to that of the data to fetch.
 iter = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -94,6 +94,38 @@ text(24, -43,"Total Reported Deaths", adj = 0,col="#CB181D",font=2,cex=6)
 text(44, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_deaths) %>% sum()), adj = 0,col="#CB181D",font=2,cex=6)
  dev.off()
 
+# Create plots for the sequencing data
+ from_Gisaid <- read.delim(paste0("./data/",today,"/gisaid_hcov-19_acknowledgement_table_",today,".csv"), header=TRUE, sep=",")
+ 
+ AF <- from_Gisaid[(from_Gisaid$continent == 'Africa' & from_Gisaid$WHO_Africa == 'Y'),]
+ 
+ AF$betterDates <- as.Date(AF$Collection.date,  format = "%d/%m/%Y")
+
+ AF_Freq <- table(AF$country)
+ AF_Freq <- data.frame(AF_Freq)
+ AF_Freq <- AF_Freq[(AF_Freq$Freq >0),]
+ 
+ WHO_AF_seq <- read.delim(paste0("./data/",today,"/WHO_Africa_Seq_Freq_",today,".csv"), header=TRUE, sep=",")
+ 
+ ## combine map data with seqence data
+ africa@data %<>% left_join(WHO_AF_seq, by=c("ISO_A3"="countryterritoryCode"))
+ 
+ breaks <- classIntervals(africa@data$sequence, n = 6, style='jenks', na.rm=T)$brks
+ orange <- brewer.pal(7, name = "Oranges")
+ 
+ # TOTAL SEQUENCE NUMBERS ON MAP  
+ png(file = "./output/WHO_Africa_seq_map.png", width=1623, height=1440, pointsize=22)
+ choroLayer(spdf = africa,
+            var = "sequence",
+            colNA = "white",
+            breaks=breaks,
+            col=orange,
+            legend.pos = "n")
+ legendChoro(pos = c(-30,-35), title.txt =  "Sequences\non GISAID\n", title.cex = 1.8,
+             values.cex = 1.5, breaks = breaks,
+             col = carto.pal(pal1 = "orange.pal",n1 = 6), values.rnd =0, cex = 1.5,
+             nodata = TRUE, nodata.txt = "Non WHO Afro country", symbol="box")
+ dev.off()
 
 # DOUBLING TIMES: Incidence----
 # This sections computes
@@ -253,9 +285,6 @@ who_dt_data$Dt_deaths[!is.finite(who_dt_data$Dt_deaths)]<- 0
 
 # PRODUCE THE MAPS FOR THE REPORT ----
 
-africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
-africa@data %<>% left_join(who_countrywide_data, by=c("ISO_A3"="countryterritoryCode"))
-
 # Maps quick achk solution for legend: overplot a white point and then a text, to replace the "0" on the scale by a more informative legend text (0s are not real zeros here, they are NA and Inf, but the NA variable is reserved for non-WHO countries here)
 
 # Map CASES ----
@@ -323,7 +352,7 @@ dev.off()
 
 
 # Map Dt CASES ----
-africa@data %<>% left_join(who_dt_data, by=c("ISO_A3"="countryterritoryCode"))
+africa@data %<>% left_join(who_dt_data %>% select(-country), by=c("ISO_A3"="countryterritoryCode"))
 
 
 
