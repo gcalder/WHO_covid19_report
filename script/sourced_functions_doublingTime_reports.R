@@ -16,72 +16,24 @@
 
 library(readxl); library(ggplot2); library(dplyr); library(tidyr); library(rdrop2); library(Rmisc); library(lubridate);library("shiny"); library("rsconnect"); library(tidyverse); library(plotly);library(yarrr); library(tidyverse);library(knitr);library(RColorBrewer);library(plyr);library(utils);library(httr);library(tidyverse);library(magrittr);library(sf);library(RColorBrewer);library(classInt);library(geojson);library(cartography);library(magick);library(geojsonio)
 
-
-# Function to iterate smoothing out of negative values!
-iterate_cleaning <- function(time_series_data){
-  while(sum(time_series_data$num_new_obs < 0) != 0){ 
-    
-    time_series_data <- data.cleaner(time_series_data)
-    
+eight_day_pos_window <- function(positive){
+  postive_window <- vector(length = length(positive))
+  i <- 1
+  j <- 1
+  
+  while(j < length(positive) + 1){
+    postive_window[j] <- (sum(positive[i:j]) == length(positive[i:j]))
+    j = j + 1
+    if(j > 8) i = i + 1
   }
-  time_series_data
+  
+  return(postive_window)
 }
 
-data.cleaner<- function(df){
-  
-  df$date<- as.Date(df$date); df.clean<- df
-  
-  # Flag problematic datapoints
-  negs<- df$date[which(df$num_new_obs < 0)];
-  flags<- c(negs, negs - 1);
-  df.clean$flag<- ifelse(df.clean$date %in% flags, 'flag', 'ok')
-  
-  # Identify each "streak"" to be able to identify groups of days to average over
-  df.clean$streak<- NA;
-  streak<- 1;
-  df.clean$streak[1]<- streak
-  for(i in 2:nrow(df.clean)){
-    
-    if(df.clean$flag[i] == df.clean$flag[i-1]){
-      df.clean$streak[i] = streak
-      
-    }else{
-      
-      streak = streak + 1
-      df.clean$streak[i] = streak
-    }
-  }
-  
-  # Compute average of num_new_obs per "streak". Only those over flagged days are releavant
-  df.clean <-
-    df.clean %>%
-    group_by(streak) %>%
-    mutate(mean_streak = round(mean(num_new_obs), 0),
-           midpoint = min(date) + (max(date) - min(date)) / 2) %>%
-    ungroup()
-  
-  # Replacement timepoints
-  replacement <-
-    df.clean %>%
-    filter(flag == 'flag') %>%
-    select(-num_new_obs,-date) %>%
-    group_by(midpoint) %>%
-    distinct(mean_streak,.keep_all=TRUE) %>%
-    ungroup() %>%
-    rename(date = midpoint, num_new_obs = mean_streak)
-  
-  # Remove the flagged days, replace with new datapoints
-  df.out <-
-    df.clean %>%
-    filter(flag != 'flag')  %>%
-    select(-mean_streak,-midpoint) %>%
-    rbind(replacement) %>%
-    arrange(date) %>%
-    select(-flag,-streak)
-  
-  return(df.out)
-  
-} # input: a dataframe which includes the column names date and num_new_obs (other columns will be ignored)
+rpois_error <- function(iterations, observation, positive){
+  if(positive) return(rpois(iterations,observation))
+  else return(NA)
+}
 
 vector_of_lists_to_matrix <- function(vector_of_lists){
   sim_matrix <- matrix(nrow=length(vector_of_lists),ncol = length(vector_of_lists[[1]]))
@@ -98,11 +50,14 @@ matrix_to_vector_of_lists <- function(matrix){
   vector_of_lists
 }
 
-sim_cum_calc_per_pop <- function(sim_obs_vector_of_lists,population){
-  sim_obs_matrix <- vector_of_lists_to_matrix(sim_obs_vector_of_lists)
-  sim_cum_obs_matrix <- apply(sim_obs_matrix,2,cumsum)
-  sim_cum_obs_matrix_per_10k = sim_cum_obs_matrix / population[1]
-  matrix_to_vector_of_lists(sim_cum_obs_matrix_per_10k)
+sim_cum_calc_per_pop <- function(sim_obs_vector_of_lists,population,positive){
+  if(positive){
+    sim_obs_matrix <- vector_of_lists_to_matrix(sim_obs_vector_of_lists)
+    sim_cum_obs_matrix <- apply(sim_obs_matrix,2,cumsum)
+    sim_cum_obs_matrix_per_10k = sim_cum_obs_matrix / population[1]
+    return(matrix_to_vector_of_lists(sim_cum_obs_matrix_per_10k))
+  }
+  else return(NA)
 }
 
 compute.td.m1.v2<- function(dat, user.t1, user.t2){
@@ -129,10 +84,17 @@ compute.td<- function(seven_day_separation){
 }
 
 
-Td.lapply<- function(cum_num_obs,date, t1, t2){
-  cum_num_obs_matrix <- vector_of_lists_to_matrix(cum_num_obs[date == t2 | date == t1])
-  obs_doubling_time <- apply(cum_num_obs_matrix,2,compute.td)
-  list(obs_doubling_time)
+Td.lapply<- function(cum_num_obs,date, t1, t2, positive,iteration){
+  has_changed_observations <- tibble(date=date,positive=positive) %>%
+    filter(date >=t1, date <=t2) %>%
+    pull(positive)
+  
+  if(sum(has_changed_observations) == length(has_changed_observations)){
+    cum_num_obs_matrix <- vector_of_lists_to_matrix(cum_num_obs[date == t2 | date == t1])
+    obs_doubling_time <- apply(cum_num_obs_matrix,2,compute.td)
+    return(list(obs_doubling_time))
+  }
+  else return(list(rep(NA,iteration)))
 }
 
 

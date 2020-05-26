@@ -5,7 +5,7 @@
 
 # 1) SET UP ----
 
-today<- Sys.Date() - 4 # Set date as to that of the data to fetch.
+today<- Sys.Date() - 1 # Set date as to that of the data to fetch.
 iter = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -97,9 +97,9 @@ text(44, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_
 # Create plots for the sequencing data
  from_Gisaid <- read.delim(paste0("./data/",today,"/gisaid_hcov-19_acknowledgement_table_",today,".csv"), header=TRUE, sep=",")
  
- AF <- from_Gisaid[(from_Gisaid$continent == 'Africa' & from_Gisaid$WHO_Africa == 'Y'),]
+ AF <- from_Gisaid[(from_Gisaid$continent == 'Africa' & from_Gisaid$country %in% WHO_cases_and_deaths$country),]
  
- AF$betterDates <- as.Date(AF$Collection.date,  format = "%d/%m/%Y")
+ AF$betterDates <- as.Date(AF$Collection.date,  format = "%Y-%m-%d")
 
  AF_Freq <- table(AF$country)
  AF_Freq <- data.frame(AF_Freq)
@@ -136,51 +136,32 @@ text(44, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_
 # To obtain a CI of the Td
 
 
-# Remove any negative values and replace with midpoint average (may lose a day or two's data)
-WHO_cases_and_deaths_cleaned <- WHO_cases_and_deaths %>%
-  group_by(country) %>% 
-  # Average out any negative cases
-  rename(num_new_obs = cases) %>%
-  nest() %>%
-  transmute(clean_data = map(data,iterate_cleaning)) %>%
-  unnest(clean_data) %>%
-  rename(cases = num_new_obs) %>%
-  # Average out any negative deaths
-  rename(num_new_obs = deaths) %>%
-  nest() %>%
-  transmute(clean_data = map(data,iterate_cleaning)) %>%
-  unnest(clean_data) %>%
-  rename(deaths = num_new_obs)  %>%
-  #recalculate cumulative sums and per 10k's
-  mutate(
-    cum_cases = cumsum(cases),
-    cum_deaths = cumsum(deaths),
-    cum_cases_per_10k = cum_cases / popsize,
-    cum_deaths_per_10k = cum_deaths / popsize,
-    cases_per_10k = cases / popsize,
-    deaths_per_10k = deaths / popsize
-  ) %>%
-  ungroup()
+# Detect any negative values 
+ WHO_cases_and_deaths_negative <- WHO_cases_and_deaths %>%
+  mutate(cases_positive = (cases > -1), deaths_positive = (deaths > -1)) %>%
+  group_by(country) %>%
+  mutate(calc_cases_dt = eight_day_pos_window(cases_positive), calc_deaths_dt = eight_day_pos_window(deaths_positive)) %>%
+   ungroup()
 
 # simulated datasets from bootstrapping
-WHO_cases_and_deaths_simulated <- WHO_cases_and_deaths_cleaned %>%
+WHO_cases_and_deaths_simulated <- WHO_cases_and_deaths_negative %>%
   group_by(country,date) %>%
-  mutate(sim_deaths = map(iter,rpois,deaths),sim_cases = map(iter,rpois,cases)) %>%
+  mutate(sim_deaths = map(iter,rpois_error,deaths,deaths_positive),sim_cases = map(iter,rpois_error,cases,cases_positive)) %>%
   group_by(country) %>%
-  mutate(sim_cum_deaths = sim_cum_calc_per_pop(sim_deaths,1),
-         sim_cum_cases = sim_cum_calc_per_pop(sim_cases,1),
-         sim_cum_deaths_per_10k = sim_cum_calc_per_pop(sim_deaths,popsize),
-         sim_cum_cases_per_10k = sim_cum_calc_per_pop(sim_cases,popsize)) %>%
+  mutate(sim_cum_deaths = sim_cum_calc_per_pop(sim_deaths,1,deaths_positive),
+         sim_cum_cases = sim_cum_calc_per_pop(sim_cases,1,cases_positive),
+         sim_cum_deaths_per_10k = sim_cum_calc_per_pop(sim_deaths,popsize,deaths_positive),
+         sim_cum_cases_per_10k = sim_cum_calc_per_pop(sim_cases,popsize,cases_positive)) %>%
   ungroup()
 
 # calculated doubling times for reported cases and for deaths
 WHO_cases_and_deaths_simulated_doubling_time<- WHO_cases_and_deaths_simulated %>%
   group_by(country) %>%
-  summarise(sim_cases_doubling_times = Td.lapply(sim_cum_cases_per_10k,date,t1.define, t2.define)) %>%
+  summarise(sim_cases_doubling_times = Td.lapply(sim_cum_cases_per_10k,date,t1.define, t2.define, cases_positive,iter)) %>%
   inner_join( 
     WHO_cases_and_deaths_simulated %>%
       group_by(country) %>%
-    summarise(sim_deaths_doubling_times = Td.lapply(sim_cum_deaths_per_10k,date,t1.define, t2.define))
+    summarise(sim_deaths_doubling_times = Td.lapply(sim_cum_deaths_per_10k,date,t1.define, t2.define, deaths_positive,iter))
   ) %>% 
   ungroup()
 
@@ -203,6 +184,10 @@ WHO_cases_and_deaths_doubling_time <- WHO_cases_and_deaths_simulated_doubling_ti
       group_by(country) %>%
       summarise(deaths_doubling_time = compute.td(cum_deaths_per_10k))
   )
+
+WHO_cases_and_deaths_doubling_time$cases_doubling_time[!(WHO_cases_and_deaths_negative %>% filter(date == max(date)) %>% pull(calc_cases_dt))] <- -1
+
+WHO_cases_and_deaths_doubling_time$deaths_doubling_time[!(WHO_cases_and_deaths_negative %>% filter(date == max(date)) %>% pull(calc_deaths_dt))] <- -1
 
 # calculate seven day cumulative increase
 WHO_cases_and_deaths_7_day_increase <- WHO_cases_and_deaths %>%
@@ -242,14 +227,14 @@ WHO_cases_and_deaths_7_day_increase$date[WHO_cases_and_deaths_7_day_increase$dat
   filter(date == today) %>%
   group_by(country)%>%
   transmute(
-            last_day_case_ci_high =round(quantile(sim_cum_cases[[1]], c(0.95), method = 6,na.rm = TRUE), 1)[[1]],
-            last_day_deaths_ci_high =round(quantile(sim_cum_deaths[[1]], c(0.95), method = 6,na.rm = TRUE), 1)[[1]],
-            last_day_case_ci_low =round(quantile(sim_cum_cases[[1]], c(0.05), method = 6,na.rm = TRUE), 1)[[1]],
-            last_day_deaths_ci_low =round(quantile(sim_cum_deaths[[1]], c(0.05), method = 6,na.rm = TRUE), 1)[[1]],
-            last_day_case_ci_high_per_10k =round(quantile(sim_cum_cases_per_10k[[1]], c(0.95), method = 6,na.rm = TRUE), 1)[[1]],
-            last_day_deaths_ci_high_per_10k =round(quantile(sim_cum_deaths_per_10k[[1]], c(0.95), method = 6,na.rm = TRUE), 1)[[1]],
-            last_day_case_ci_low_per_10k =round(quantile(sim_cum_cases_per_10k[[1]], c(0.05), method = 6,na.rm = TRUE), 1)[[1]],
-            last_day_deaths_ci_low_per_10k =round(quantile(sim_cum_deaths_per_10k[[1]], c(0.05), method = 6,na.rm = TRUE), 1)[[1]]) %>%
+            last_day_case_ci_high =round(quantile(sim_cum_cases[[1]], c(0.95), method = 6,na.rm = TRUE))[[1]],
+            last_day_deaths_ci_high =round(quantile(sim_cum_deaths[[1]], c(0.95), method = 6,na.rm = TRUE))[[1]],
+            last_day_case_ci_low =round(quantile(sim_cum_cases[[1]], c(0.05), method = 6,na.rm = TRUE))[[1]],
+            last_day_deaths_ci_low =round(quantile(sim_cum_deaths[[1]], c(0.05), method = 6,na.rm = TRUE))[[1]],
+            last_day_case_ci_high_per_10k =round(quantile(sim_cum_cases_per_10k[[1]], c(0.95), method = 6,na.rm = TRUE))[[1]],
+            last_day_deaths_ci_high_per_10k =round(quantile(sim_cum_deaths_per_10k[[1]], c(0.95), method = 6,na.rm = TRUE))[[1]],
+            last_day_case_ci_low_per_10k =round(quantile(sim_cum_cases_per_10k[[1]], c(0.05), method = 6,na.rm = TRUE))[[1]],
+            last_day_deaths_ci_low_per_10k =round(quantile(sim_cum_deaths_per_10k[[1]], c(0.05), method = 6,na.rm = TRUE))[[1]]) %>%
   inner_join(
     WHO_cases_and_deaths %>%
       filter(date == today) %>%
@@ -366,7 +351,7 @@ choroLayer(spdf = africa, var = "Dt_cases", colNA = "grey", legend.nodata = "Non
            breaks=breaks, col=palgreen, legend.title.txt = "Days", legend.title.cex = 1, 
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-35))
 points(-23.3, -31, pch = 16, col = 'white', cex = 2)
-text(-24, -30, 'No case reported or < 7 days ago', adj = 0)
+text(-24, -30, 'Non reported or adjusted < 7 days ago', adj = 0)
 dev.off()
 
 # Map Dt DEATHS ----
@@ -380,7 +365,7 @@ choroLayer(spdf = africa, var = "Dt_deaths", colNA = "grey", legend.nodata = "No
            breaks=breaks, col=palgreen,legend.title.txt = "Days", legend.title.cex = 1, 
            legend.values.cex = 1, legend.values.rnd = 3, legend.pos = c(-30,-35))
 points(-23.3, -31, pch = 16, col = 'white', cex = 2)
-text(-24, -30, 'No death reported or < 7 days ago', adj = 0)
+text(-24, -30, 'Non reported or adjusted < 7 days ago', adj = 0)
 dev.off()
 
 
