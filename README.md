@@ -21,7 +21,7 @@ The report is released every Friday around 10am.
 	- sheet 4: population counts per country
 	- sheet 5: data for map
 
-	As well as a csv file named gisaid_hcov-19_acknowledgement_table_2020-MM-DD.csv containing the latest meta data of SARS-CoV-2 sequences received from Africa.
+As well as a csv file named gisaid_hcov-19_acknowledgement_table_2020-MM-DD.csv containing the latest meta data of SARS-CoV-2 sequences received from Africa.
 
 Each sheet has one row per date, and one column per country (+ first column being the dates)
 
