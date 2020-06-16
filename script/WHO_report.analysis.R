@@ -15,17 +15,23 @@ time_window<- 7 # Time window over which doubling time is calculated
 t2.define<- today
 t1.define<- t2.define - time_window
 
-library(geojsonio)
+# library to read excel files
 library(readxl)
-library(utils)
-library(httr)
+# large library of generic data science tools for manipulating data
 library(tidyverse)
 library(magrittr)
-library(sf)
+# import a relatively sensible colour palette 
 library(RColorBrewer)
+# class interval library to group countries together with similar cases/deaths counts 
+# so that they are given the same colour
 library(classInt)
-library(geojson)
+# libraries to create all of the maps (require a lot of other packages to work)
+library(sf)
+library(geojsonio)
 library(cartography)
+# library with useful function for reading/manipulating dates
+library(lubridate)
+# library to manipulate images
 library(magick)
 
 # LOADING DATA ----
@@ -80,10 +86,7 @@ if(sum(is.na(WHO_cases_and_deaths$cases)) > 0 | sum(is.na(WHO_cases_and_deaths$d
 
 who_countrywide_data<- read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'data for map') 
 
-
-# I ran this only once, to produce the WHO_Africa3.png in ./input_files.
-# Can be re-run to produce the same map but with a different color etc.
-# Map with countries in WHO-Africa for front page.
+# Creates the begining image / logo showing the WHO AFRO Region
  africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
  africa@data %<>% left_join(who_countrywide_data, by=c("ISO_A3"="countryterritoryCode"))
  africa@data$WHOCountry <- ifelse(is.na(africa@data$location),0,1)
