@@ -16,6 +16,7 @@ t2.define<- today
 t1.define<- t2.define - time_window
 
 library(geojsonio)
+library(readxl)
 library(utils)
 library(httr)
 library(tidyverse)
@@ -95,20 +96,27 @@ text(44, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_
  dev.off()
 
 # Create plots for the sequencing data
- from_Gisaid <- read.delim(paste0("./data/",today,"/gisaid_hcov-19_acknowledgement_table_",today,".csv"), header=TRUE, sep=",")
+ from_Gisaid <- read_csv(paste0("./data/",today,"/gisaid_hcov-19_acknowledgement_table_",today,".csv"))
  
  AF <- from_Gisaid[(from_Gisaid$continent == 'Africa' & from_Gisaid$country %in% WHO_cases_and_deaths$country),]
- 
- AF$betterDates <- as.Date(AF$Collection.date,  format = "%Y-%m-%d")
+  
+ AF$betterDates <- dmy(AF$Collection.date)# origin= "1899-12-30"
 
  AF_Freq <- table(AF$country)
  AF_Freq <- data.frame(AF_Freq)
  AF_Freq <- AF_Freq[(AF_Freq$Freq >0),]
  
- WHO_AF_seq <- read.delim(paste0("./data/",today,"/WHO_Africa_Seq_Freq_",today,".csv"), header=TRUE, sep=",")
+ WHO_AF_seq <- AF %>%
+   group_by(country) %>%
+   summarise(sequence = n()) %>%
+   bind_rows(distinct(WHO_cases_and_deaths,country) %>% 
+               filter(!(country %in% AF$country)) %>%
+               mutate(sequence = 0)) %>%
+   bind_rows(tibble(country = "Côte d’Ivoire", sequence = 0))
+   
  
  ## combine map data with seqence data
- africa@data %<>% left_join(WHO_AF_seq, by=c("ISO_A3"="countryterritoryCode"))
+ africa@data %<>% left_join(WHO_AF_seq, by=c("location"="country"))
  
  breaks <- classIntervals(africa@data$sequence, n = 6, style='jenks', na.rm=T)$brks
  orange <- brewer.pal(7, name = "Oranges")
