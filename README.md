@@ -1,36 +1,34 @@
-WHO COVID19 SITUATION REPORT
+# WHO COVID19 SITUATION REPORT
 
-This repository is for producing a report for WHO Africa Region giving and overview and a by-country summary of the COVID19 epidemic progression across the 47 WHO Afro Region countries.
+This repository is for producing a report for WHO Africa Region giving an overview and a by-country summary of the COVID-19 epidemic progression across the 47 WHO Afro Region countries.
 In a nutshell, an "analysis script" loads the data, performs doubling time and 95%CIs calculations & Co. The resulting R session is saved as an RData object, which is then loaded by the Rmarkdown script, which produces the pdf/word report with the figures.
+
+The report is released every Friday around 10am.
 
 
 1) OUTSTANDING WORK IN PROGRESS
 
-- pairwise heatmap of epidemic progression (by number of days ahead/behind): Production of the heatmap in correct order. from a table of pairwise comparisons + double checking of the epidemic.diff() function --> see scratch code in ./archived_code/pariwise_heatmap
-- fetching data from centralised database being set up by Giles.
-- improve functions in sourced script to make them more general (avoid constraints on variable naming, which may be somethimes comfusing, e.g. having to name "cumNumCases" when we are dealing with deaths data... where "cumNumDeaths" would be more appropriate). Not drastically important but may be better for code readability/sharing/checking
 - IMPORTANT ONE: How to deal with bootstrap sample size when simulated epidemics generate NA of Inf doubling time? filtering out leads to 95%CI computed from small samples. Re-iterating simulations until reaching desired sample size would generate biased distribution... be agnostic? Leave the NAs and Inf and say there is not enough cases to compute reliable CIs. [READ compute.td.m1.v2(), sim.epi() and Td.apply() FUNCTIONS DESCRIPTION FOR MORE DETAILS]
-- Fan plots. I think they're correct, but they are the most recent addition and code would benefit from a double check that it does what it should do and what Mark meant.
-
 
 
 2) FILES
 
-./data: one directory per day. Each contains a single excel file named WHO_Africa_data_2020-MM-DD.xlsx, with:
+./data: one directory per day. Each contains a excel file named WHO_Africa_data_2020-MM-DD.xlsx, with:
 	- sheet 1: cumulative deaths
 	- sheet 2: cumulative cases
 	- sheet 3: cumulative cases per 10k population
 	- sheet 4: cumulative deaths per 10k population
 	- sheet 4: population counts per country
-	- sheet 5: data for map (Actually not needed --> will tell Feifei not to bother about making that one anymore)
+	- sheet 5: data for map
+
+	As well as a csv file named gisaid_hcov-19_acknowledgement_table_2020-MM-DD.csv containing the latest meta data of SARS-CoV-2 sequences received from Africa.
 
 Each sheet has one row per date, and one column per country (+ first column being the dates)
 
-In current state of things, this excel file is fetched from the dropbox (https://www.dropbox.com/home/Africa%20data) where Feifei uploads it. See with Giles for username and password. However this is changing (Gile setting up a more centralised database solution)
+In current state of things, the excel file is fetched from Feifei's OneDrive (Ask for access). Feifei typically creates the latest excel spreadsheet on Thursday afternoon/evening. The GISAID csv file is received from Lu on Thursday mornings. 
 
 
-
-./input_files: files used in analysis or Rmarkdown files
+./input_files: files used in analysis or Rmarkdown files (do not change! This is data (typically mapping data) required for every report)
 	- Africa1.geojson: africa map data file. Used to produce maps in analysis script
 	- WHO_Africa3.png: image with WHO countries colored. Used in Rmarkdown at "Section 2" page to give an overview of WHO Africa Region
 	- WHO_country_list: table in txt tab delimited format, used in analysis script for mapping WHO countries name and filter out non-WHO countries from data and maps. Has correspondence between various names of the WHO countries (ISO3: for maps, country: names as they are in the data, name_plot: shortened version of names may be useful for plots, etc.)
@@ -101,32 +99,6 @@ epidemic.diff()
 	- INPUT: a dataframe with col 1 being dates and other columns, being cumulative numbers of cases/deaths in different regions/countries + the names of the two series to compare, those names must match names of the input dataframe.
 	- OUTPUT: a single number, corresponding to the number of days difference of the 'focal country' relative to 'versus country'. A positive number indicates that the focal country is ahead. A negative number indicates that the focal country is behind.
 	- NOTE: therefore, re-running the function but inverting focal and versus country will give the same number but with inverted sign. If the epidemics have not reached comparable numbers at any point in time yet, the function spits out an NA.
-
-
-5) DETAILS ON FIGURES PARAMETERS CONVENTIONS USED
-
-I use base graphic, because I find it much more flexible in the end and can accommodate more complex layout. May require more work than ggplot but can acheive much better final results.
-But base graphic implies specifying a lot of parameters, and because here the right parameter settings for the data to be nice looking will change as the epidemic progresses (e.g. Y-axis ticks every 100 is releavant for now, but won't be when there will be 1000's of cases).
-
-To (try to) facilitate things, I define a set of variables in the first {r} chunk of the Rmarkdown file, which are the parameters settings of the figures. Those include everything, from the size of the labels, to their font face, the space between axes and labels, the number of tick marks, the size of tick marks, the values displayed etc.
-
-
-Since the by-country figures all display all countries in shades of grey and highlight one specific country, the aim is to find the right parameter settings for all countries to be reasonnably visible. And sincne the same scale is used for each by-country plot, then, it's rather easy here.
-
-Hence, the best is to run the code and inspect the figures in the pdf, see how they look, and see if you want to adjust some settings. The settings that you are more likely to have to adjust are the Y-axis scales and ticks. So here are some more details about it. For the others, the parameters are annotated in the Rmd file directly.
-
-
-Y-axis scales spacing: set of four parameters, these will have to be manually adapted to best display the data as the situation evolves
-
-
-Define actual y-tick sequences, setting the min a max and at which values to display them:
-	y-scale for cumulative cases: currently adjusted to the thirsd worst country in terms of number of cases, otherwise the rest of the data is flat compared to the cumulative cases curve of the worst countries
-	y-scale for cumulative deaths: same thing here but here adjusted to the second worst country
-	y-scale for log10 cumulative cases per 10k pop: currently from min to max with floor and ceiling nearest unit rounding respectively
-	y-scale for log10 cumulative deaths per 10k pop: currently from min to max with floor and ceiling nearest unit rounding respectively
-
-
-For the fan plots --> Scale is defined in the plotting code, as this does not require adjustment.
 
 
 
