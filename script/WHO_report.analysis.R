@@ -103,7 +103,7 @@ text(44, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_
  
  AF <- from_Gisaid[(from_Gisaid$continent == 'Africa' & from_Gisaid$country %in% WHO_cases_and_deaths$country),]
   
- AF$betterDates <- dmy(AF$Collection.date)# origin= "1899-12-30"
+ AF$betterDates <- ymd(AF$Collection.date)# origin= "1899-12-30"
 
  AF_Freq <- table(AF$country)
  AF_Freq <- data.frame(AF_Freq)

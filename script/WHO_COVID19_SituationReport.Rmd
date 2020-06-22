@@ -41,9 +41,12 @@ knitr::opts_chunk$set(message=FALSE)
 
 today <- Sys.Date() - 1
 library(plyr)
+library(knitr)
+library(stringr)
+library(ggplot2)
 library(cowplot)
-library(RColorBrewer)
 library(toOrdinal)
+library(tidyverse)
 load(paste0('../output/WHO_report_analysis_', as.character(today), '.RData'))
 source('../script/sourced_functions_doublingTime_reports.R')
 
@@ -236,7 +239,7 @@ for( i in country_list){
           axis.title.x = element_blank(),
           plot.title = element_text(hjust = 0.5)) +
     labs(title="Cases",y="Cumulative") +
-    scale_x_date(date_labels = "%b %d",breaks=c(today-84,today-63,today-42,today-21,today)) +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-105,today-84,today-63,today-42,today-21,today)) +
     coord_cartesian(ylim = c(0,ifelse(current_country_max_cases > 40, current_country_max_cases,40)))
   
   # plot deaths
@@ -253,7 +256,7 @@ for( i in country_list){
           axis.title.y = element_blank(),
           plot.title = element_text(hjust = 0.5)) +
     labs(title = "Deaths") +
-    scale_x_date(date_labels = "%b %d",breaks=c(today-84,today-63,today-42,today-21,today)) +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-105,today-84,today-63,today-42,today-21,today)) +
     coord_cartesian(ylim = c(0,ifelse(current_country_max_deaths > 20, current_country_max_deaths,20)))
   
   # plot cases per 10k
@@ -269,7 +272,7 @@ for( i in country_list){
           axis.title.x = element_blank()) +
     labs(x="Date",y="Cumulative per 10k population") +
     scale_y_log10(breaks = c(0.1,0.01,0.001,0.0001),labels = c("0.1","0.01","0.001","0.0001")) +
-    scale_x_date(date_labels = "%b %d",breaks=c(today-84,today-63,today-42,today-21,today)) +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-105,today-84,today-63,today-42,today-21,today)) +
     coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_cases_per_10k > 0.01, current_country_max_cases_per_10k,0.1)))
   
   # plot deaths per 10k
@@ -285,7 +288,7 @@ for( i in country_list){
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
           axis.title.y = element_blank())  +
-    scale_x_date(date_labels = "%b %d",breaks=c(today-84,today-63,today-42,today-21,today),limits = c(current_country_data %>% distinct(date) %>% pull(date) %>% min(),today))  +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-105,today-84,today-63,today-42,today-21,today),limits = c(current_country_data %>% distinct(date) %>% pull(date) %>% min(),today))  +
     coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_deaths_per_10k > 0.01, current_country_max_deaths_per_10k,0.01)))
  
   # plot 7 day case increase
