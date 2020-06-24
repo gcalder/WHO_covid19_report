@@ -5,7 +5,7 @@
 
 # 1) SET UP ----
 
-today<- Sys.Date() - 1 # Set date as to that of the data to fetch.
+today<- Sys.Date() - 6 # Set date as to that of the data to fetch.
 iter = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -33,6 +33,8 @@ library(cartography)
 library(lubridate)
 # library to manipulate images
 library(magick)
+# rolling windows for weekly ratios
+library(RcppRoll)
 
 # LOADING DATA ----
 
@@ -86,6 +88,53 @@ if(sum(is.na(WHO_cases_and_deaths$cases)) > 0 | sum(is.na(WHO_cases_and_deaths$d
 
 who_countrywide_data<- read_excel(paste0('./data/', today, '/WHO_Africa_data_', today, '.xlsx'), sheet = 'data for map') 
 
+# Calculate the current weekly ratio with confidence intervals
+weekly_ratios_ci <- function(A, B){
+  
+  e <- sqrt(1/A + 1/B)
+  
+  est <- c(exp(log(A/B) - e * 1.96),
+           exp(log(A/B) + e * 1.96))
+  
+  tab <- tibble(type = c("ratio_m","lci", "uci"),
+                est = c(A/B, est[[1]], est[[2]]))
+  return(tab)
+  
+}
+
+# loop weekly ratio test over all data 
+weekly_ratios_2 <- function(df, outcome, smooth_by = 7){
+  
+  df <- df %>% 
+    subset(date >= lubridate::ymd("2020-02-20")) %>%
+    filter(!is.na(.data[[outcome]])) %>% 
+    group_by(country) %>%
+    mutate(change = roll_sumr(.data[[outcome]], n = smooth_by),
+           change_prev = lag(change, n = smooth_by),
+           ratio = change/change_prev) %>%
+    mutate(comparison = if_else(ratio >1, "greater than", "less than")) %>%
+    ungroup()
+  
+  df_long <- df %>%
+    filter(!is.na(ratio) & !is.infinite(ratio)) %>%
+    group_by(country,date) %>%
+    nest() %>%
+    mutate(tab = map(data, ~ weekly_ratios_ci(.x$change, .x$change_prev))) %>%
+    mutate(ratio = map_dbl(tab, ~parse_number(as.character((.x[1,2]))))) %>%
+    mutate(lci = map_dbl(tab, ~parse_number(as.character((.x[2,2]))))) %>% 
+    mutate(uci = map_dbl(tab, ~parse_number(as.character((.x[3,2]))))) %>% 
+    ungroup() %>%
+    select(date, country, ratio, lci, uci) 
+  
+  df_long
+  
+}
+
+  WHO_cases_and_deaths_weekly_ratio <- WHO_cases_and_deaths %>%
+  left_join(weekly_ratios_2(WHO_cases_and_deaths,"cases")) %>%
+  left_join(weekly_ratios_2(WHO_cases_and_deaths,"deaths"), suffix= c("_c","_d"), by = c("country", "date"))
+
+
 # Creates the begining image / logo showing the WHO AFRO Region
  africa <- geojson_read("./input_files/Africa1.geojson", what="sp")
  africa@data %<>% left_join(who_countrywide_data, by=c("ISO_A3"="countryterritoryCode"))
@@ -96,46 +145,6 @@ text(-34, -43,"Total Reported Cases", adj = 0,col="#08519C",font=2,cex=6)
 text(-18, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_cases) %>% sum()), adj = 0,col="#08519C",font=2,cex=6)
 text(24, -43,"Total Reported Deaths", adj = 0,col="#CB181D",font=2,cex=6)
 text(44, -48,paste0(WHO_cases_and_deaths %>% filter(date == today) %>% pull(cum_deaths) %>% sum()), adj = 0,col="#CB181D",font=2,cex=6)
- dev.off()
-
-# Create plots for the sequencing data
- from_Gisaid <- read_csv(paste0("./data/",today,"/gisaid_hcov-19_acknowledgement_table_",today,".csv"))
- 
- AF <- from_Gisaid[(from_Gisaid$continent == 'Africa' & from_Gisaid$country %in% WHO_cases_and_deaths$country),]
-  
- AF$betterDates <- ymd(AF$Collection.date)# origin= "1899-12-30"
-
- AF_Freq <- table(AF$country)
- AF_Freq <- data.frame(AF_Freq)
- AF_Freq <- AF_Freq[(AF_Freq$Freq >0),]
- 
- WHO_AF_seq <- AF %>%
-   group_by(country) %>%
-   summarise(sequence = n()) %>%
-   bind_rows(distinct(WHO_cases_and_deaths,country) %>% 
-               filter(!(country %in% AF$country)) %>%
-               mutate(sequence = 0)) %>%
-   bind_rows(tibble(country = "Côte d’Ivoire", sequence = 0))
-   
- 
- ## combine map data with seqence data
- africa@data %<>% left_join(WHO_AF_seq, by=c("location"="country"))
- 
- breaks <- classIntervals(africa@data$sequence, n = 6, style='jenks', na.rm=T)$brks
- orange <- brewer.pal(7, name = "Oranges")
- 
- # TOTAL SEQUENCE NUMBERS ON MAP  
- png(file = "./output/WHO_Africa_seq_map.png", width=1623, height=1440, pointsize=22)
- choroLayer(spdf = africa,
-            var = "sequence",
-            colNA = "white",
-            breaks=breaks,
-            col=orange,
-            legend.pos = "n")
- legendChoro(pos = c(-30,-35), title.txt =  "Sequences\non GISAID\n", title.cex = 1.8,
-             values.cex = 1.5, breaks = breaks,
-             col = carto.pal(pal1 = "orange.pal",n1 = 6), values.rnd =0, cex = 1.5,
-             nodata = TRUE, nodata.txt = "Non WHO Afro country", symbol="box")
  dev.off()
 
 # DOUBLING TIMES: Incidence----
