@@ -39,7 +39,7 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today <- Sys.Date() - 6
+today <- Sys.Date() - 11
 library(plyr)
 library(knitr)
 library(stringr)
