@@ -39,7 +39,7 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today <- Sys.Date() - 11
+today <- Sys.Date() - 1
 library(plyr)
 library(knitr)
 library(stringr)
@@ -238,7 +238,7 @@ for( i in country_list){
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank()) +
     labs(x="Date",y="Cumulative per 10k population") +
-    scale_y_log10(breaks = c(0.1,0.01,0.001,0.0001),labels = c("0.1","0.01","0.001","0.0001")) +
+    scale_y_log10(breaks = c(1,0.1,0.01,0.001,0.0001),labels = c("1","0.1","0.01","0.001","0.0001")) +
     scale_x_date(date_labels = "%b %d",breaks=c(today-105,today-84,today-63,today-42,today-21,today)) +
     coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_cases_per_10k > 0.01, current_country_max_cases_per_10k,0.1)))
   
