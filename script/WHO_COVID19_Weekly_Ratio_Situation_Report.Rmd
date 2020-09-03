@@ -234,9 +234,10 @@ for( i in country_list){
     theme_classic(base_size = 15) + 
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
-          plot.title = element_text(hjust = 0.5)) +
+          plot.title = element_text(hjust = 0.5),
+          axis.text.x = element_text(angle = 60)) +
     labs(title="Cases",y="Cumulative") +
-    scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today )) +
+    scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today)) +
     coord_cartesian(ylim = c(0,ifelse(current_country_max_cases > 40, current_country_max_cases,40)))
   
   # plot deaths
@@ -251,7 +252,8 @@ for( i in country_list){
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
           axis.title.y = element_blank(),
-          plot.title = element_text(hjust = 0.5)) +
+          plot.title = element_text(hjust = 0.5),
+          axis.text.x = element_text(angle = 60)) +
     labs(title = "Deaths") +
     scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today)) +
     coord_cartesian(ylim = c(0,ifelse(current_country_max_deaths > 20, current_country_max_deaths,20)))
@@ -266,7 +268,8 @@ for( i in country_list){
               colour="black",size = 0.8) +
     theme_classic(base_size = 15) + 
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
-          axis.title.x = element_blank()) +
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 60)) +
     labs(x="Date",y="Cumulative per 10k population") +
     scale_y_log10(breaks = c(1,0.1,0.01,0.001,0.0001),labels = c("1","0.1","0.01","0.001","0.0001")) +
     scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today)) +
@@ -284,7 +287,8 @@ for( i in country_list){
     theme_classic(base_size = 15) +
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
-          axis.title.y = element_blank())  +
+          axis.title.y = element_blank(),
+          axis.text.x = element_text(angle = 60))  +
     scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today),limits = c(current_country_data %>% distinct(date) %>% pull(date) %>% min(),today))  +
     coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_deaths_per_10k > 0.01, current_country_max_deaths_per_10k,0.01)))
  
@@ -353,8 +357,8 @@ An online version of the report is available  at [https://dimmestp.shinyapps.io/
 ## Data
 
 ### Sources and access
-- Case counts for countries in WHO Africa Region from WHO Coronavirus disease (COVID-2019) situation reports https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports (accessed 2400 `r format(today, "%d/%m/%Y")`).  
-- Death counts for countries in WHO African Region from WHO Coronavirus disease (COVID-2019) situation reports https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports (accessed 2400 `r format(today, "%d/%m/%Y")`).  
+- Case counts for countries from WHO Coronavirus disease (COVID-2019) Dashboard https://covid19.who.int/table (accessed 2400 `r format(today, "%d/%m/%Y")`).  
+- Death counts for countries from WHO Coronavirus disease (COVID-2019) Dashboard https://covid19.who.int/table (accessed 2400 `r format(today, "%d/%m/%Y")`).  
 - Population counts from the World Bank (2018) https://data.worldbank.org/indicator/SP.POP.TOTL?locations=ZG (accessed 0900  30/03/2020).
 
 

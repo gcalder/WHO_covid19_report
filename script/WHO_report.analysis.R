@@ -5,7 +5,7 @@
 
 # 1) SET UP ----
 
-today<- Sys.Date() # Set date as to that of the data to fetch.
+today<- Sys.Date() - 1 # Set date as to that of the data to fetch.
 iter = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -53,7 +53,6 @@ data <-
   rename(Date_reported=ï..Date_reported) %>%
   mutate(Date_reported=as.Date(Date_reported, format = "%Y-%m-%d"))
 
-print(data)
 ## Extract data for WHO AFRO
 africa_data <- 
   data[which(data$WHO_region == 'AFRO'& !(data$Country == "Réunion") & !(data$Country == "Mayotte")),] %>%## we didn't include the two territories before
@@ -63,7 +62,6 @@ africa_data <-
              'cum_cases'="Cumulative_cases" ,
              "cum_deaths"="Cumulative_deaths")
 
-print(africa_data)
 # All columns in WHO_cases_and_deaths are WHO countries.
 # After modifying "Côte d'Ivoire" into "Cote d'Ivoire" (without the ^), and `São Tomé and Príncipe into Sao Tome and Principe, then the variable "country" of the who_country_aliases_and_populations is the one that matches the countries name of the data
 # + formatting variable names to fit in rest of the script
@@ -177,6 +175,8 @@ who_WR_data<- # Assemble the weekly ratios formatted for maps plotting
          countryterritoryCode = ISO3)
 
 # Set the NA, -1 and Inf WR to zero, so that they appear in white on the maps
+who_WR_data$WR_cases[who_WR_data$WR_cases == 0]<- 0.00000001 
+who_WR_data$WR_deaths[who_WR_data$WR_deaths == 0]<- 0.0000001
 who_WR_data$WR_cases[!is.finite(who_WR_data$WR_cases)]<- 0 
 who_WR_data$WR_deaths[!is.finite(who_WR_data$WR_deaths)]<- 0
 who_WR_data$WR_cases[who_WR_data$WR_cases < 0]<- 0 
@@ -276,15 +276,13 @@ dev.off()
 breaks <- classIntervals(africa@data$WR_deaths, n = 4, style = "jenks", na.rm=T)$brks
 breaks[1]<-0.0000001
 # find groupings below 1 and above one to set red/green colours
+
 groups_less_than_one <- sum(breaks < 1)
 breaks[(groups_less_than_one + 1)] = 0.99999
-
 palredgreen <- brewer.pal(groups_less_than_one, name = "Greens")
 palredgreen <- c(rev(palredgreen)[1:groups_less_than_one],brewer.pal(4 - groups_less_than_one, name = "Reds"))
 palredgreen<-c("#FFFFFF",palredgreen)
 breaks <- c(0,breaks)
-print(breaks)
-print(palredgreen)
 png(filename = paste0('./output/Map_WR_deaths_', today, '_.png'), width=1920, height=1240, pointsize = 22)
 choroLayer(spdf = africa, var = "WR_deaths", colNA = "grey", legend.nodata = "Non WHO Afro country",
            breaks=breaks, col=palredgreen,legend.title.txt = "Ratio", legend.title.cex = 1, 
