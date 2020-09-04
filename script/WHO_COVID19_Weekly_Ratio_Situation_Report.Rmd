@@ -1,6 +1,6 @@
 ---
 title: \textcolor{TIBAORANGE}{COVID-19 situation report for WHO Africa Region}
-subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date(), "%d/%m/%Y")`}
+subtitle: \textcolor{TIBAORANGE}{`r format(Sys.Date() + 1, "%d/%m/%Y")`}
 author: \textcolor{TIBARED}{Produced by the TIBA COVID-19 Pandemic Response Unit}
 header-includes:      
     - \usepackage{fancyhdr}
@@ -39,7 +39,7 @@ knitr::opts_chunk$set(tidy = TRUE)
 knitr::opts_chunk$set(message=FALSE)
 
 
-today <- Sys.Date() - 1
+today <- Sys.Date()
 library(plyr)
 library(knitr)
 library(stringr)
@@ -235,7 +235,7 @@ for( i in country_list){
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
           plot.title = element_text(hjust = 0.5),
-          axis.text.x = element_text(angle = 60)) +
+          axis.text.x = element_text(angle = 60, hjust=1, vjust=0.9)) +
     labs(title="Cases",y="Cumulative") +
     scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today)) +
     coord_cartesian(ylim = c(0,ifelse(current_country_max_cases > 40, current_country_max_cases,40)))
@@ -253,7 +253,7 @@ for( i in country_list){
           axis.title.x = element_blank(),
           axis.title.y = element_blank(),
           plot.title = element_text(hjust = 0.5),
-          axis.text.x = element_text(angle = 60)) +
+          axis.text.x = element_text(angle = 60, hjust = 1, vjust=0.9)) +
     labs(title = "Deaths") +
     scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today)) +
     coord_cartesian(ylim = c(0,ifelse(current_country_max_deaths > 20, current_country_max_deaths,20)))
@@ -269,7 +269,7 @@ for( i in country_list){
     theme_classic(base_size = 15) + 
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 60)) +
+          axis.text.x = element_text(angle = 60, hjust = 1, vjust=0.9)) +
     labs(x="Date",y="Cumulative per 10k population") +
     scale_y_log10(breaks = c(1,0.1,0.01,0.001,0.0001),labels = c("1","0.1","0.01","0.001","0.0001")) +
     scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today)) +
@@ -288,7 +288,7 @@ for( i in country_list){
     theme(panel.grid.major.y = element_line(colour = "lightgrey",size=0.02),
           axis.title.x = element_blank(),
           axis.title.y = element_blank(),
-          axis.text.x = element_text(angle = 60))  +
+          axis.text.x = element_text(angle = 60, hjust = 1, vjust=0.9)) +
     scale_x_date(date_labels = "%b %d",breaks=c(today-140,today-112,today-84,today-56,today-28,today),limits = c(current_country_data %>% distinct(date) %>% pull(date) %>% min(),today))  +
     coord_cartesian(ylim = c(0.00005,ifelse(current_country_max_deaths_per_10k > 0.01, current_country_max_deaths_per_10k,0.01)))
  

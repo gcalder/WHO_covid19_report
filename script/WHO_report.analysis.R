@@ -5,7 +5,7 @@
 
 # 1) SET UP ----
 
-today<- Sys.Date() - 1 # Set date as to that of the data to fetch.
+today<- Sys.Date() # Set date as to that of the data to fetch.
 iter = 1000 # Number of iterations for the poisson error simulation (bootstrap), Set to 1000. Or 10 for a quick test.
 set.seed(as.numeric(today)) # setting seed allows repeatability of poisson error simulations. Use the date as a reference point for the seed.
 
@@ -20,7 +20,7 @@ library(readxl)
 # large library of generic data science tools for manipulating data
 library(tidyverse)
 library(magrittr)
-# import a relatively sensible colour palette 
+# import a relatively sensible colour palette
 library(RColorBrewer)
 # class interval library to group countries together with similar cases/deaths counts 
 # so that they are given the same colour
@@ -259,6 +259,7 @@ breaks[1]= 0.0000001
 # find groupings below 1 and above one to set red/green colours
 groups_less_than_one <- sum(breaks < 1)
 breaks[(groups_less_than_one + 1)] = 0.999999
+
 
 palredgreen <- brewer.pal(groups_less_than_one, name = "Greens")
 palredgreen <- c(rev(palredgreen)[1:groups_less_than_one],brewer.pal(7 - groups_less_than_one, name = "Reds"))
